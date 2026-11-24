@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="swell">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SignQuest: learn to sign with your camera</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff7417'/><text x='50' y='70' font-size='56' text-anchor='middle' font-family='Impact' fill='%231b3a9c'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Rubik:wght@400;500;600;700;800&display=swap">
+<style>
+  /* ---------- tokens ----------
+     Each theme is one of the three posters from the reference, built on a
+     complementary pair: violet + marigold, coral + leaf green, cobalt + tangerine. */
+  :root {
+    --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+    --ui: 'Rubik', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --good: #2fe38c; --bad: #ff3d7f;
+  }
+  html[data-theme="dark"] {
+    --bg: #1e1442; --surface: #2b1d5e; --surface-2: #3a2a7a; --ink: #fff4d6; --muted: #c3b6f5;
+    --line: #4b3b92; --frame: #0f0927; --pop: #ffc53d;
+    --accent: #ffc53d; --on-accent: #1e1442;
+    --btn: #ffc53d; --btn-ink: #1e1442; --btn-depth: #b98600;
+    --btn2: #3a2a7a; --btn2-ink: #fff4d6; --btn2-depth: #140c33;
+    --letter: #ffc53d; --disc-ink: #ffc53d; --disc-under: #140c33;
+    --disc-bg: repeating-radial-gradient(circle, #120a30 0 2px, #1d1248 2px 5px);
+    --ghost: #ffc53d; --ghost-glow: #ffc53d; --ring: #ffc53d;
+    --ok-soft: rgba(47,227,140,.16); --bad-soft: rgba(255,61,127,.18); --ok-ink: #7af2b8; --bad-ink: #ff9cbd;
+    --stage-bg: radial-gradient(circle at 50% 40%, #3a2a7a, #140c33);
+    --overlay: rgba(14,8,36,.74);
+  }
+  html[data-theme="grow"] {
+    --bg: #e8f0d8; --surface: #fbfdf5; --surface-2: #d8e6c2; --ink: #16321f; --muted: #4a6852;
+    --line: #bcd1a3; --frame: #16321f; --pop: #16321f;
+    --accent: #ff5a36; --on-accent: #16321f;
+    --btn: #ff5a36; --btn-ink: #16321f; --btn-depth: #b23718;
+    --btn2: #d8e6c2; --btn2-ink: #16321f; --btn2-depth: #a5bf88;
+    --letter: #16321f; --disc-ink: #16321f; --disc-under: #ff5a36;
+    --disc-bg: #ff5a36;
+    --ghost: #fff1d0; --ghost-glow: #ff5a36; --ring: #ff5a36;
+    --ok-soft: #cdeed9; --bad-soft: #ffdbe5; --ok-ink: #0f6b3d; --bad-ink: #a8103c;
+    --stage-bg: radial-gradient(circle at 50% 40%, #2f5a3e, #102418);
+    --overlay: rgba(22,50,31,.5);
+  }
+  html[data-theme="swell"] {
+    --bg: #fbe7c3; --surface: #fff5e2; --surface-2: #f5d7a2; --ink: #1b3a9c; --muted: #465ea8;
+    --line: #ebc685; --frame: #1b3a9c; --pop: #ff7417;
+    --accent: #ff7417; --on-accent: #0e1d55;
+    --btn: #1b3a9c; --btn-ink: #fff5e2; --btn-depth: #0e1d55;
+    --btn2: #f5d7a2; --btn2-ink: #1b3a9c; --btn2-depth: #d6a85b;
+    --letter: #1b3a9c; --disc-ink: #0e1d55; --disc-under: #fff5e2;
+    --disc-bg: linear-gradient(#ff7417 0 55%, #fff5e2 55% 60%, #ff7417 60% 69%, #fff5e2 69% 74%, #ff7417 74% 82%, #fff5e2 82% 87%, #ff7417 87%);
+    --ghost: #ffb067; --ghost-glow: #ff7417; --ring: #ff7417;
+    --ok-soft: #d2f1df; --bad-soft: #ffdbe4; --ok-ink: #0d6b42; --bad-ink: #ad123d;
+    --stage-bg: radial-gradient(circle at 50% 40%, #2b4fb8, #0e1d55);
+    --overlay: rgba(14,29,85,.5);
+  }
+
+  /* ---------- base ---------- */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: var(--ui); font-size: 16px; -webkit-font-smoothing: antialiased; }
+  body { transition: background-color .3s, color .3s; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .hidden { display: none !important; }
+  kbd { font: 600 11px var(--ui); opacity: .7; border: 1.5px solid currentColor; border-radius: 6px; padding: 0 5px; margin-left: 6px; }
+
+  /* chunky, pressable buttons */
+  .btn { --b: var(--btn); --i: var(--btn-ink); --d: var(--btn-depth);
+    background: var(--b); color: var(--i); font-weight: 700; font-size: 17px; padding: 14px 24px; border-radius: 16px;
+    box-shadow: 0 5px 0 var(--d); transition: transform .08s, box-shadow .08s, filter .15s; }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--d); }
+  .btn.alt { --b: var(--btn2); --i: var(--btn2-ink); --d: var(--btn2-depth); }
+  .btn.small { font-size: 15px; padding: 11px 14px; border-radius: 14px; }
+  .btn[aria-pressed="true"] { --b: var(--accent); --i: var(--on-accent); --d: var(--frame); }
+  .btn:disabled { opacity: .6; cursor: progress; }
+
+  /* ---------- header ---------- */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; flex-wrap: wrap; }
+  .wordmark { font-family: var(--display); font-weight: 900; font-size: 36px; text-transform: uppercase; line-height: 1; display: flex; align-items: center; gap: 10px; letter-spacing: .01em; }
+  .wordmark .sun { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); border: 3px solid var(--frame); }
+  .stats { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .pill { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 2px solid var(--line); padding: 6px 12px; border-radius: 999px; font-weight: 700; font-size: 15px; }
+  .pill .lv { font-size: 12px; color: var(--muted); }
+  .xpbar { width: 60px; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .xpbar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+  .swatches { display: flex; gap: 6px; padding: 4px; background: var(--surface); border: 2px solid var(--line); border-radius: 999px; }
+  .swatch { width: 28px; height: 28px; border-radius: 50%; border: 3px solid transparent; transition: transform .12s; }
+  .swatch[aria-pressed="true"] { border-color: var(--ink); transform: scale(1.06); }
+  .swatch[data-t="swell"] { background: linear-gradient(135deg, #1b3a9c 50%, #ff7417 50%); }
+  .swatch[data-t="dark"] { background: linear-gradient(135deg, #1e1442 50%, #ffc53d 50%); }
+  .swatch[data-t="grow"] { background: linear-gradient(135deg, #16321f 50%, #ff5a36 50%); }
+  .iconbtn { width: 42px; height: 42px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line); font-size: 17px; display: grid; place-items: center; }
+  .iconbtn:hover { border-color: var(--ink); }
+
+  /* ---------- layout ---------- */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; padding: 4px 24px 30px; align-items: start; }
+  .play { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .panel { display: flex; flex-direction: column; gap: 16px; }
+
+  /* session bar: close, progress, combo (Duolingo-style) */
+  .session { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 14px; min-height: 42px; }
+  .session.idle { visibility: hidden; }
+  .quit { width: 42px; height: 42px; border-radius: 50%; font-size: 22px; font-weight: 700; color: var(--muted); }
+  .quit:hover { background: var(--surface); color: var(--ink); }
+  .segs { display: flex; gap: 6px; }
+  .segs i { flex: 1; height: 16px; border-radius: 99px; background: var(--surface-2); transition: background-color .25s; }
+  .segs i.done { background: var(--good); }
+  .segs i.skip { background: var(--bad); }
+  .segs i.now { background: var(--accent); }
+  .timer { height: 16px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .timer i { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 99px; transition: width .2s linear; }
+  .sess-label { font-weight: 700; color: var(--muted); font-size: 16px; }
+  .sess-right { display: flex; gap: 8px; align-items: center; }
+  .chip { font-weight: 800; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 2px solid var(--line); font-variant-numeric: tabular-nums; }
+  .chip.combo { background: var(--accent); color: var(--on-accent); border-color: var(--frame); }
+
+  /* camera stage */
+  .stage { position: relative; width: 100%; aspect-ratio: var(--ar, 4 / 3); max-height: calc(100vh - 160px); margin: 0 auto;
+    background: var(--stage-bg); border: 3px solid var(--frame); border-radius: 28px; overflow: hidden; box-shadow: 10px 10px 0 var(--pop); }
+  .stage video, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; transform: scaleX(-1); }
+  .stage video { object-fit: cover; }
+  .target-chip { position: absolute; top: 14px; right: 14px; background: var(--accent); color: var(--on-accent); border: 3px solid var(--frame); border-radius: 18px;
+    padding: 4px 14px 0; font-family: var(--display); font-weight: 900; font-size: 56px; line-height: 1; min-width: 66px; text-align: center; text-transform: uppercase; }
+  .target-chip.long { font-size: 28px; padding: 8px 14px 4px; }
+  .qbanner { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); background: var(--surface); color: var(--ink); border: 3px solid var(--frame);
+    padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 17px; display: flex; gap: 10px; align-items: center; white-space: nowrap; box-shadow: 4px 4px 0 var(--pop); }
+  .feedback { position: absolute; left: 14px; right: 14px; bottom: 14px; border-radius: 20px; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; border: 3px solid var(--frame); transform: translateY(150%); transition: transform .22s cubic-bezier(.2, .9, .3, 1.25); }
+  .feedback.show { transform: translateY(0); }
+  .feedback.good { background: var(--good); color: #062b19; }
+  .feedback.word { background: var(--accent); color: var(--on-accent); }
+  .feedback.skip { background: var(--surface); color: var(--ink); }
+  .feedback b { font-family: var(--display); font-weight: 900; font-size: 42px; text-transform: uppercase; line-height: .95; }
+  .feedback span { font-weight: 700; font-size: 16px; text-align: right; }
+
+  /* target poster */
+  .poster { background: var(--surface); border: 3px solid var(--frame); border-radius: 24px; box-shadow: 8px 8px 0 var(--pop); padding: 18px 18px 16px; }
+  .poster-top { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+  .bigletter { font-family: var(--display); font-weight: 900; font-size: 176px; line-height: .78; color: var(--letter); text-transform: uppercase; padding-top: 10px; overflow-wrap: anywhere; }
+  .bigletter.long { font-size: 60px; line-height: .9; padding-top: 0; }
+  .disc-wrap { --hold: 0; width: 170px; height: 170px; border-radius: 50%; padding: 7px; background: conic-gradient(var(--good) calc(var(--hold) * 1turn), var(--surface-2) 0); flex: none; }
+  .disc { width: 100%; height: 100%; border-radius: 50%; background: var(--disc-bg); border: 3px solid var(--frame); overflow: hidden; }
+  .disc canvas { width: 100%; height: 100%; display: block; transform: scaleX(-1); }
+  .tip { margin: 14px 0 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+  .word { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .word span { width: 42px; height: 50px; display: grid; place-items: center; font-family: var(--display); font-weight: 900; font-size: 34px; border-radius: 10px;
+    background: var(--surface-2); color: var(--ink); transition: transform .15s, background-color .15s; }
+  .word span.done { background: var(--good); color: #062b19; }
+  .word span.now { background: var(--accent); color: var(--on-accent); transform: translateY(-4px); box-shadow: 0 4px 0 var(--frame); }
+
+  /* coach + mascot */
+  .coach-row { display: grid; grid-template-columns: 74px 1fr; gap: 12px; align-items: center; }
+  .coach { position: relative; background: var(--surface); border: 3px solid var(--line); border-radius: 18px; padding: 14px 16px; font-weight: 600; font-size: 18px;
+    line-height: 1.35; min-height: 66px; display: flex; align-items: center; transition: border-color .2s; }
+  .coach::before { content: ''; position: absolute; left: -10px; top: 50%; width: 15px; height: 15px; background: var(--surface); border-left: 3px solid; border-bottom: 3px solid;
+    border-color: inherit; transform: translateY(-50%) rotate(45deg); }
+  .coach.good { border-color: var(--good); }
+  .coach.fix { border-color: var(--bad); }
+  .coach.wait { border-color: var(--accent); }
+  .mascot { width: 74px; height: 84px; overflow: visible; }
+  .mascot .body { fill: var(--accent); stroke: var(--frame); stroke-width: 4; stroke-linejoin: round; }
+  .mascot .eye { fill: #fff; stroke: var(--frame); stroke-width: 3; }
+  .mascot .pupil { fill: var(--frame); transition: transform .25s; }
+  .mascot .happy-eye { fill: none; stroke: var(--frame); stroke-width: 4; stroke-linecap: round; display: none; }
+  .mascot .mouth { fill: none; stroke: var(--frame); stroke-width: 4; stroke-linecap: round; }
+  .mascot .mouth-o { fill: var(--frame); display: none; }
+  .mascot .blink { animation: blink 4.5s infinite; transform-box: fill-box; transform-origin: center; }
+  .mascot.happy .eye, .mascot.happy .pupil { display: none; }
+  .mascot.happy .happy-eye { display: inline; }
+  .mascot.happy { animation: hop .55s ease-out; }
+  .mascot.think .pupil { transform: translate(3px, -3px); }
+  .mascot.oops .mouth { display: none; }
+  .mascot.oops .mouth-o { display: inline; }
+  .mascot.oops .pupil { transform: translate(0, 2px); }
+  @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+  @keyframes hop { 30% { transform: translateY(-12px) rotate(-7deg); } 65% { transform: translateY(0) rotate(4deg); } }
+
+  /* match meter + finger pills */
+  .meter { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+  .meter .lbl { color: var(--muted); font-size: 15px; font-weight: 700; }
+  .meter-bar { height: 16px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+  .meter-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--bad); transition: width .15s, background-color .2s; }
+  .meter-bar i.mid { background: var(--accent); }
+  .meter-bar i.high { background: var(--good); }
+  .pct { font-family: var(--display); font-size: 30px; font-weight: 900; min-width: 58px; text-align: right; line-height: 1; }
+  .fingers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .finger { border-radius: 14px; padding: 8px 2px 7px; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--muted); background: var(--surface); border: 2px solid var(--line); }
+  .finger .mark { display: block; font-size: 17px; line-height: 1.2; }
+  .finger.ok { background: var(--ok-soft); border-color: var(--good); color: var(--ok-ink); }
+  .finger.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad-ink); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .actions .btn { flex: 1; white-space: nowrap; }
+  .refinfo { color: var(--muted); font-size: 13.5px; margin: 0; line-height: 1.45; }
+
+  /* ---------- overlays ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 10; background: var(--overlay); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 20px; overflow: auto; }
+  .sheet { background: var(--bg); border: 3px solid var(--frame); border-radius: 30px; box-shadow: 12px 12px 0 var(--pop); padding: 32px; width: min(1000px, 100%);
+    max-height: calc(100vh - 40px); overflow: auto; }
+  .sheet h1 { font-family: var(--display); font-weight: 900; text-transform: uppercase; line-height: .86; margin: 0; font-size: clamp(46px, 6vw, 76px); color: var(--letter); }
+  .sheet h2 { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: 32px; line-height: 1; margin: 30px 0 4px; }
+  .sheet p { color: var(--muted); line-height: 1.55; max-width: 62ch; }
+  .lead { font-size: 18px; }
+  .fine { font-size: 13.5px; }
+  .status { margin-top: 16px; font-weight: 700; min-height: 22px; }
+  .status.error { color: var(--bad-ink); }
+
+  /* start hero */
+  .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 34px; align-items: center; }
+  .hero h1 { font-size: clamp(60px, 8.4vw, 112px); }
+  .hero .row { justify-content: flex-start; }
+  .demo { position: relative; }
+  .demo .disc-wrap { width: 100%; height: auto; aspect-ratio: 1; padding: 10px; background: var(--surface-2); }
+  .demo-letter { position: absolute; left: -8%; bottom: -6%; font-family: var(--display); font-weight: 900; font-size: clamp(110px, 13vw, 170px); line-height: .8;
+    color: var(--letter); text-transform: uppercase; paint-order: stroke; -webkit-text-stroke: 10px var(--bg); }
+
+  /* home: mode posters */
+  .posters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 24px; }
+  .poster-btn { position: relative; text-align: left; border-radius: 22px; padding: 18px 18px 16px; min-height: 240px; overflow: hidden; border: 3px solid var(--pi);
+    box-shadow: 6px 6px 0 var(--pi); transition: transform .12s, box-shadow .12s; display: flex; flex-direction: column; }
+  .poster-btn:hover { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 var(--pi); }
+  .poster-btn:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--pi); }
+  .poster-btn .t { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: 60px; line-height: .82; color: var(--pt); position: relative; z-index: 1; }
+  .poster-btn .d { margin-top: auto; font-size: 14px; font-weight: 600; color: var(--pd); max-width: 56%; position: relative; z-index: 1; line-height: 1.35; }
+  .poster-btn svg { position: absolute; right: -12px; bottom: -12px; width: 60%; height: auto; }
+  .p-learn { background: #fbe7c3; --pi: #1b3a9c; --pt: #1b3a9c; --pd: #1b3a9c; }
+  .p-rush { background: #1e1442; --pi: #ffc53d; --pt: #ffc53d; --pd: #e9e0ff; }
+  .p-teach { background: #e8f0d8; --pi: #16321f; --pt: #16321f; --pd: #16321f; }
+  .p-rush .vinyl { transform-origin: 60px 60px; transform-box: view-box; }
+  .poster-btn:hover .vinyl { animation: spin 1.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* home: letter path */
+  .path { position: relative; display: flex; gap: 16px; overflow-x: auto; padding: 18px 6px 44px; }
+  .path::before { content: ''; position: absolute; left: 40px; right: 40px; top: 70px; border-top: 4px dashed var(--line); }
+  .node { position: relative; flex: 0 0 auto; width: 76px; height: 76px; border-radius: 50%; padding: 6px;
+    background: conic-gradient(var(--accent) calc(var(--p) * 1turn), var(--surface-2) 0); transition: transform .12s; }
+  .node:nth-child(even) { margin-top: 28px; }
+  .node:hover { transform: scale(1.07); }
+  .node > span { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 3px solid var(--frame);
+    font-family: var(--display); font-weight: 900; font-size: 36px; color: var(--ink); text-transform: uppercase; overflow: hidden; }
+  .node.mastered > span { background: var(--accent); color: var(--on-accent); }
+  .node.custom > span { font-size: 17px; line-height: 1; padding: 0 4px; text-align: center; }
+  .node small { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+  /* results */
+  .results { text-align: center; max-width: 660px; }
+  .results h1 { font-size: clamp(60px, 10vw, 104px); }
+  .results p { margin-left: auto; margin-right: auto; }
+  .suns { display: flex; justify-content: center; gap: 16px; margin-bottom: 18px; }
+  .suns i { width: 58px; height: 58px; border-radius: 50%; border: 3px solid var(--frame); background: var(--surface-2); }
+  .suns i.on { background: var(--accent); box-shadow: 4px 4px 0 var(--frame); animation: sunpop .45s cubic-bezier(.2, .9, .3, 1.4) both; }
+  @keyframes sunpop { from { transform: scale(0); } }
+  .statrow { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px 34px; margin: 22px 0 8px; }
+  .stat b { display: block; font-family: var(--display); font-weight: 900; font-size: 52px; line-height: 1; }
+  .stat span { color: var(--muted); font-weight: 600; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+  .chips span { background: var(--surface); border: 2px solid var(--line); border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: 14px; }
+  .chips span.skip { color: var(--bad-ink); border-color: var(--bad); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 26px; }
+  input[type=text] { width: 100%; background: var(--surface); border: 3px solid var(--line); border-radius: 16px; padding: 14px 16px; color: var(--ink);
+    font: 700 22px var(--ui); margin-top: 8px; }
+  input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+  .debug { position: fixed; left: 10px; bottom: 10px; z-index: 20; background: rgba(0,0,0,.84); color: #b8ffcf; font: 12px/1.45 ui-monospace, Menlo, monospace;
+    padding: 10px 12px; border-radius: 10px; margin: 0; max-width: 360px; white-space: pre; pointer-events: none; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--surface); color: var(--ink); border: 3px solid var(--frame);
+    box-shadow: 5px 5px 0 var(--pop); padding: 12px 18px; border-radius: 16px; font-weight: 700; z-index: 30; max-width: min(560px, 90vw); }
+
+  /* ---------- responsive & motion ---------- */
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } .stage { max-height: none; } }
+  @media (max-width: 780px) {
+    .hero { grid-template-columns: 1fr; }
+    .demo { max-width: 300px; margin: 8px auto 0; }
+    .posters { grid-template-columns: 1fr; }
+    .poster-btn { min-height: 180px; }
+    .sheet { padding: 22px; }
+  }
+  @media (max-width: 620px) {
+    .top { padding: 10px 14px; }
+    .wordmark { font-size: 30px; }
+    .stats { gap: 6px; }
+    .pill { padding: 5px 9px; }
+    .xpbar { display: none; }
+    .swatch { width: 24px; height: 24px; }
+    .iconbtn { width: 36px; height: 36px; font-size: 15px; }
+    #btnHome { display: none; } /* the ✕ in the session bar goes home on phones */
+    .layout { padding: 0 14px 16px; }
+    .bigletter { font-size: 140px; }
+    .disc-wrap { width: 140px; height: 140px; }
+    .qbanner { font-size: 15px; white-space: normal; width: 88%; }
+    .feedback b { font-size: 32px; }
+    .stage { box-shadow: 6px 6px 0 var(--pop); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wordmark"><span class="sun" aria-hidden="true"></span>SignQuest</div>
+  <div class="stats">
+    <div class="pill" title="Days in a row you've played"><span aria-hidden="true">🔥</span><b id="streak">0</b></div>
+    <div class="pill" title="Level"><span class="lv">Lv</span><b id="level">1</b><div class="xpbar"><i id="xpfill"></i></div></div>
+    <div class="pill" title="Total XP"><span aria-hidden="true">⭐</span><b id="xp">0</b></div>
+    <div class="swatches" role="group" aria-label="Colour theme">
+      <button class="swatch" data-t="swell" aria-label="Swell colours: cobalt and tangerine" aria-pressed="false"></button>
+      <button class="swatch" data-t="dark" aria-label="After dark colours: violet and marigold" aria-pressed="false"></button>
+      <button class="swatch" data-t="grow" aria-label="Grow colours: leaf green and coral" aria-pressed="false"></button>
+    </div>
+    <button class="iconbtn" id="btnMute" title="Sound on or off (M)" aria-label="Sound on or off">🔊</button>
+    <button class="iconbtn" id="btnHome" title="Home (Esc)" aria-label="Home">🏠</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="play">
+    <div class="session idle" id="session">
+      <button class="quit" id="btnQuit" aria-label="Leave this round">✕</button>
+      <div>
+        <div class="segs hidden" id="segs"></div>
+        <div class="timer hidden" id="timerWrap"><i id="timerFill"></i></div>
+        <div class="sess-label hidden" id="sessLabel"></div>
+      </div>
+      <div class="sess-right">
+        <span class="chip hidden" id="timerChip">60s</span>
+        <span class="chip combo hidden" id="comboChip">🔥 2</span>
+      </div>
+    </div>
+    <section class="stage" id="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="canvas" width="640" height="480"></canvas>
+      <div class="target-chip hidden" id="targetChip"></div>
+      <div class="qbanner hidden" id="qbanner" role="status"><span id="qicon">✋</span><span id="qtext"></span></div>
+      <div class="feedback" id="feedback" aria-live="polite"><b id="fbTitle"></b><span id="fbSub"></span></div>
+    </section>
+  </section>
+
+  <aside class="panel">
+    <div class="poster">
+      <div class="poster-top">
+        <div class="bigletter" id="bigLetter">Hi</div>
+        <div class="disc-wrap" id="discWrap"><div class="disc"><canvas id="mini" width="300" height="300" aria-label="Target hand shape, as it looks in a mirror"></canvas></div></div>
+      </div>
+      <p class="tip" id="tip">Pick a game to start. The hand in the circle shows the target shape, the way you'll see it in a mirror.</p>
+      <div class="word hidden" id="wordBar"></div>
+    </div>
+    <div class="coach-row">
+      <svg class="mascot" id="mascot" viewBox="0 0 80 90" aria-hidden="true">
+        <g>
+          <rect class="body" x="5" y="47" width="25" height="13" rx="6.5" transform="rotate(-32 17 53)"/>
+          <rect class="body" x="16" y="16" width="12" height="38" rx="6"/>
+          <rect class="body" x="29" y="8" width="12" height="44" rx="6"/>
+          <rect class="body" x="42" y="12" width="12" height="40" rx="6"/>
+          <rect class="body" x="55" y="22" width="11" height="32" rx="5.5"/>
+          <rect class="body" x="14" y="38" width="54" height="46" rx="20"/>
+        </g>
+        <g class="blink">
+          <ellipse class="eye" cx="32" cy="58" rx="6.5" ry="7.5"/>
+          <ellipse class="eye" cx="50" cy="58" rx="6.5" ry="7.5"/>
+          <circle class="pupil" cx="33" cy="59" r="3.2"/>
+          <circle class="pupil" cx="51" cy="59" r="3.2"/>
+        </g>
+        <path class="happy-eye" d="M26 60 q6 -9 12 0"/>
+        <path class="happy-eye" d="M44 60 q6 -9 12 0"/>
+        <path class="mouth" d="M35 71 q6 6 12 0"/>
+        <ellipse class="mouth-o" cx="41" cy="72" rx="3.5" ry="4.5"/>
+      </svg>
+      <div class="coach" id="coach">Show me your hand.</div>
+    </div>
+    <div class="meter">
+      <span class="lbl">Match</span>
+      <div class="meter-bar"><i id="matchFill"></i></div>
+      <b class="pct" id="matchPct">–</b>
+    </div>
+    <div class="fingers" id="fingers"></div>
+    <div class="actions" id="actions">
+      <button class="btn alt small" id="btnGhost" aria-pressed="false" title="Show or hide the ghost hand (H)">👻 Ghost hand<kbd>H</kbd></button>
+      <button class="btn alt small" id="btnSkip" title="Skip this sign (S)">Skip<kbd>S</kbd></button>
+    </div>
+    <div class="actions hidden" id="freeActions">
+      <button class="btn alt small" id="btnPrev" aria-label="Previous sign">◀</button>
+      <button class="btn alt small" id="btnNext" aria-label="Next sign">▶</button>
+      <button class="btn small" id="btnCalib" title="Sign it correctly and record it as the target">Record reference</button>
+      <button class="btn alt small" id="btnCalibReset" title="Go back to the built-in rules">Reset</button>
+    </div>
+    <p class="refinfo" id="refInfo"></p>
+  </aside>
+</main>
+
+<!-- Start -->
+<div class="overlay" id="startScreen">
+  <div class="sheet">
+    <div class="hero">
+      <div>
+        <h1>Learn to sign with your camera</h1>
+        <p class="lead">Every finger lights up green or red, a ghost hand shows the shape you're aiming for, and each clean sign earns XP.</p>
+        <div class="row"><button class="btn" id="btnStart">Start camera</button></div>
+        <div class="status" id="startStatus" role="status"></div>
+        <p class="fine">Hand tracking runs in your browser. Your video never leaves this device.</p>
+      </div>
+      <div class="demo" aria-hidden="true">
+        <div class="disc-wrap"><div class="disc"><canvas id="demo" width="400" height="400"></canvas></div></div>
+        <div class="demo-letter" id="demoLetter">L</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Home -->
+<div class="overlay hidden" id="homeScreen">
+  <div class="sheet">
+    <h1>Pick a game</h1>
+    <p id="homeSub">Rounds take about a minute. If the camera loses you, the clock stops and you lose nothing.</p>
+    <div class="posters">
+      <button class="poster-btn p-learn" id="modeLesson">
+        <span class="t">Learn<br>five</span>
+        <span class="d">Five signs, chosen from the ones you find hardest.</span>
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="66" cy="58" r="40" fill="#ff7417"/>
+          <rect x="20" y="70" width="100" height="5" fill="#fbe7c3"/><rect x="20" y="82" width="100" height="5" fill="#fbe7c3"/>
+          <path d="M0 96 q15 -10 30 0 t30 0 t30 0 t30 0 V120 H0Z" fill="#1b3a9c"/>
+          <path d="M0 108 q15 -10 30 0 t30 0 t30 0 t30 0 V120 H0Z" fill="#2f57c9"/>
+        </svg>
+      </button>
+      <button class="poster-btn p-rush" id="modeRush">
+        <span class="t">Spell<br>rush</span>
+        <span class="d">Fingerspell words against a 60-second clock. Chain clean signs for bonus XP.</span>
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <g class="vinyl">
+            <circle cx="60" cy="60" r="50" fill="#0f0927"/>
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#2b1d5e" stroke-width="1.5"/>
+            <circle cx="60" cy="60" r="34" fill="none" stroke="#2b1d5e" stroke-width="1.5"/>
+            <circle cx="60" cy="60" r="26" fill="none" stroke="#2b1d5e" stroke-width="1.5"/>
+            <circle cx="60" cy="60" r="15" fill="#ffc53d"/>
+            <text x="60" y="64.5" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="12" fill="#1e1442">ABC</text>
+            <circle cx="60" cy="60" r="2" fill="#0f0927"/>
+          </g>
+        </svg>
+      </button>
+      <button class="poster-btn p-teach" id="modeTeach">
+        <span class="t">Teach<br>a sign</span>
+        <span class="d">Record any sign, like an ISL word or your name sign, and practise it here.</span>
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <g stroke="#ff5a36" stroke-width="3.5" stroke-linecap="round">
+            <line x1="62" y1="62" x2="62" y2="14"/><line x1="62" y1="62" x2="34" y2="22"/><line x1="62" y1="62" x2="90" y2="22"/>
+            <line x1="62" y1="62" x2="22" y2="44"/><line x1="62" y1="62" x2="102" y2="44"/><line x1="62" y1="62" x2="47" y2="15"/>
+            <line x1="62" y1="62" x2="77" y2="15"/><line x1="62" y1="62" x2="27" y2="32"/><line x1="62" y1="62" x2="97" y2="32"/>
+          </g>
+          <circle cx="62" cy="58" r="16" fill="#ff5a36"/>
+          <path d="M40 74 H84 L78 116 H46Z" fill="#16321f"/>
+          <rect x="36" y="70" width="52" height="10" rx="3" fill="#2f6b45"/>
+        </svg>
+      </button>
+    </div>
+    <h2>Your letters</h2>
+    <p class="fine" id="pathNote">Sign a letter cleanly three times to master it. Tap any letter to practise it on its own.</p>
+    <div class="path" id="path"></div>
+    <p class="fine">Built in: 10 ASL letters that hold still (A B D F I L U V W Y). Letters that move, like J and Z, and two-handed signs aren't supported yet.</p>
+  </div>
+</div>
+
+<!-- Results -->
+<div class="overlay hidden" id="resultScreen">
+  <div class="sheet results">
+    <div class="suns" id="resSuns"></div>
+    <h1 id="resTitle">Round done</h1>
+    <div class="statrow" id="resStats"></div>
+    <div class="chips" id="resList"></div>
+    <p id="resWeak"></p>
+    <div class="row">
+      <button class="btn" id="btnAgain">Play again</button>
+      <button class="btn alt" id="btnResHome">Back to games</button>
+    </div>
+  </div>
+</div>
+
+<!-- Teach -->
+<div class="overlay hidden" id="teachScreen">
+  <div class="sheet" style="max-width:600px">
+    <h1>Teach a sign</h1>
+    <p>Name the sign, press Record, then hold it still for about two seconds. That recording becomes the target.</p>
+    <p class="fine">The best reference comes from a fluent signer. Two or three takes, ideally from different people, let the game accept natural variation. Signs that hold still work best for now.</p>
+    <label for="teachName" class="fine" style="font-weight:700">Sign name</label>
+    <input type="text" id="teachName" maxlength="16" placeholder="HELLO, NAMASTE, your name sign…">
+    <div class="row">
+      <button class="btn" id="btnTeachGo">Record</button>
+      <button class="btn alt" id="btnTeachCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<pre class="debug hidden" id="debug"></pre>
+<div class="toast hidden" id="toast" role="status"></div>
+
+<!-- ============================ SIGN ENGINE ============================
+     Pure functions with no DOM access: hand normalisation, features,
+     matching, ghost hands, quality gate, smoothing. Tested in Node. -->
+<script id="engine">
+(function (root) {
+  'use strict';
+
+  const LONG = ['index', 'middle', 'ring', 'pinky'];
+  const FINGERS = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+  const IDX = { thumb: [1, 2, 3, 4], index: [5, 6, 7, 8], middle: [9, 10, 11, 12], ring: [13, 14, 15, 16], pinky: [17, 18, 19, 20] };
+  const BONES = [
+    [0, 1, 'thumb'], [1, 2, 'thumb'], [2, 3, 'thumb'], [3, 4, 'thumb'],
+    [0, 5, 'palm'], [5, 9, 'palm'], [9, 13, 'palm'], [13, 17, 'palm'], [0, 17, 'palm'],
+    [5, 6, 'index'], [6, 7, 'index'], [7, 8, 'index'],
+    [9, 10, 'middle'], [10, 11, 'middle'], [11, 12, 'middle'],
+    [13, 14, 'ring'], [14, 15, 'ring'], [15, 16, 'ring'],
+    [17, 18, 'pinky'], [18, 19, 'pinky'], [19, 20, 'pinky'],
+  ];
+
+  // Matching thresholds. These are starting guesses: open the debug panel (D)
+  // and compare against real hands, or record a reference to replace them.
+  const T = {
+    EXT_MAX_BEND: 45,       // degrees of bend: a finger counts as straight below this
+    BENT_MIN_BEND: 65,      // degrees of bend: a finger counts as folded above this
+    BEND_SCALE: 60,
+    THUMB_IN_MAX: 0.30,     // thumb tip sideways position in palm units (+ = index side)
+    THUMB_OUT_MIN: 0.62,
+    THUMB_SCALE: 0.35,
+    SPREAD_APART_MIN: 14,   // degrees between index and middle fingers
+    SPREAD_TOGETHER_MAX: 9,
+    SPREAD_SCALE: 15,
+    TOUCH_MAX: 0.33,        // thumb tip to index tip distance, palm units
+    TOUCH_SCALE: 0.3,
+    PASS_DEV: 0.12,         // a check passes when its deviation is at or below this
+  };
+
+  // Tracking-quality gate thresholds.
+  const Q = {
+    DARK: 45,               // mean frame brightness (0-255)
+    EDGE: 0.02,             // landmarks closer than this to the frame edge
+    MIN_PALM: 0.10,         // wrist-to-knuckle length as a share of frame height
+    MAX_PALM: 0.48,
+    MIN_PALM_WIDTH: 0.28,   // knuckle width / palm length; lower means hand is edge-on
+    STEADY: 0.035,          // average landmark motion per frame, palm units
+    MIN_PRESENCE: 0.5,
+  };
+
+  // ---------- geometry ----------
+  const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: (a.z || 0) - (b.z || 0) });
+  const len2 = (a) => Math.hypot(a.x, a.y);
+  const len3 = (a) => Math.hypot(a.x, a.y, a.z || 0);
+  function angle3(a, b) {
+    const d = len3(a) * len3(b);
+    if (d < 1e-9) return 0;
+    const c = (a.x * b.x + a.y * b.y + (a.z || 0) * (b.z || 0)) / d;
+    return Math.acos(Math.max(-1, Math.min(1, c))) * 180 / Math.PI;
+  }
+  function angle2(a, b) {
+    const d = len2(a) * len2(b);
+    if (d < 1e-9) return 0;
+    const c = (a.x * b.x + a.y * b.y) / d;
+    return Math.acos(Math.max(-1, Math.min(1, c))) * 180 / Math.PI;
+  }
+
+  // Normalised MediaPipe landmarks (0-1) to pixels. z uses the x scale, as MediaPipe documents.
+  function toPx(lms, W, H) {
+    return lms.map((l) => ({ x: l.x * W, y: l.y * H, z: (l.z || 0) * W }));
+  }
+
+  // A 2D frame attached to the hand: origin at the wrist, +y toward the middle
+  // knuckle, +x toward the index side, 1 unit = wrist-to-middle-knuckle length.
+  // Works for left or right hand and for palm or back facing the camera.
+  function makeFrame(o, x, y, palm) {
+    return {
+      o, x, y, palm,
+      to(pt) {
+        const dx = pt.x - o.x, dy = pt.y - o.y;
+        return [(dx * x.x + dy * x.y) / palm, (dx * y.x + dy * y.y) / palm];
+      },
+      from(u, v) {
+        return { x: o.x + (x.x * u + y.x * v) * palm, y: o.y + (x.y * u + y.y * v) * palm };
+      },
+    };
+  }
+  function handFrame(p) {
+    const o = p[0];
+    const yv = sub(p[9], o);
+    const palm = len2(yv) || 1;
+    const y = { x: yv.x / palm, y: yv.y / palm };
+    const xr = sub(p[5], p[17]);
+    const proj = xr.x * y.x + xr.y * y.y;
+    let x = { x: xr.x - proj * y.x, y: xr.y - proj * y.y };
+    const xl = Math.hypot(x.x, x.y);
+    x = xl < 1e-6 ? { x: -y.y, y: y.x } : { x: x.x / xl, y: x.y / xl };
+    return makeFrame({ x: o.x, y: o.y }, x, y, palm);
+  }
+  // Where to draw the ghost when no hand is visible: an upright right hand,
+  // palm to camera, in raw (unmirrored) image coordinates.
+  function defaultFrame(W, H, scale) {
+    const palm = (scale || 0.22) * H;
+    return makeFrame({ x: W * 0.5, y: H * 0.5 + palm * 1.0 }, { x: 1, y: 0 }, { x: 0, y: -1 }, palm);
+  }
+
+  // ---------- features ----------
+  function features(p) {
+    const frame = handFrame(p);
+    const bend = {};
+    for (const n of LONG) {
+      const [m, pip, dip, tip] = IDX[n];
+      // angle between first and last finger bones: 0 = straight, ~180 = curled
+      bend[n] = angle3(sub(p[pip], p[m]), sub(p[tip], p[dip]));
+    }
+    const [thumbX, thumbY] = frame.to(p[4]);
+    return {
+      bend, thumbX, thumbY,
+      thumbIndex: len2(sub(p[4], p[8])) / frame.palm,
+      spread: angle2(sub(p[8], p[5]), sub(p[12], p[9])),
+      palmWidth: len2(sub(p[5], p[17])) / frame.palm,
+      frame,
+    };
+  }
+  const VEC_KEYS = ['index', 'middle', 'ring', 'pinky', 'thumbX', 'thumbY', 'spread', 'thumbIndex'];
+  function vec(ft) {
+    return [ft.bend.index, ft.bend.middle, ft.bend.ring, ft.bend.pinky, ft.thumbX, ft.thumbY, ft.spread, ft.thumbIndex];
+  }
+
+  // ---------- matching ----------
+  function finalize(out, items) {
+    for (const it of items) it.ok = it.dev <= T.PASS_DEV;
+    for (const n of FINGERS) {
+      const f = out.fingers[n];
+      if (f && !f.active) f.ok = true;
+    }
+    for (const e of out.extras) if (!e.ok) for (const n of e.fingers) if (out.fingers[n]) out.fingers[n].extraBad = true;
+    const devs = items.map((i) => i.dev);
+    const mx = devs.length ? Math.max(...devs) : 0;
+    const mean = devs.length ? devs.reduce((a, b) => a + b, 0) / devs.length : 0;
+    out.score = Math.max(0, Math.min(1, 1 - 0.6 * mx - 0.4 * mean));
+    out.match = items.every((i) => i.ok);
+    out.worst = items.filter((i) => !i.ok).sort((a, b) => b.dev - a.dev)[0] || null;
+    out.items = items;
+    return out;
+  }
+
+  // Rule-based check for built-in signs.
+  function evalSpec(ft, tg) {
+    const out = { fingers: {}, extras: [], mode: 'rules' };
+    const items = [];
+    for (const n of LONG) {
+      const want = (tg.fingers && tg.fingers[n]) || 'any';
+      const b = ft.bend[n];
+      let dev = 0, msg = '';
+      if (want === 'ext') { dev = Math.max(0, b - T.EXT_MAX_BEND) / T.BEND_SCALE; msg = `Straighten your ${n} finger`; }
+      else if (want === 'bent') { dev = Math.max(0, T.BENT_MIN_BEND - b) / T.BEND_SCALE; msg = `Fold your ${n} finger down`; }
+      const it = { key: n, finger: n, dev: Math.min(dev, 1), msg, active: want !== 'any' };
+      out.fingers[n] = it;
+      if (it.active) items.push(it);
+    }
+    {
+      const w = tg.thumb || 'any', tx = ft.thumbX;
+      let dev = 0, msg = '';
+      if (w === 'in') { dev = Math.max(0, tx - T.THUMB_IN_MAX) / T.THUMB_SCALE; msg = 'Tuck your thumb in across your palm'; }
+      else if (w === 'out') { dev = Math.max(0, T.THUMB_OUT_MIN - tx) / T.THUMB_SCALE; msg = 'Stick your thumb straight out to the side'; }
+      else if (w === 'side') {
+        if (tx < T.THUMB_IN_MAX) { dev = (T.THUMB_IN_MAX - tx) / T.THUMB_SCALE; msg = 'Rest your thumb along the side of your index finger'; }
+        else if (tx > T.THUMB_OUT_MIN) { dev = (tx - T.THUMB_OUT_MIN) / T.THUMB_SCALE; msg = 'Bring your thumb in against your hand'; }
+      } else if (w === 'touchIndex') { dev = Math.max(0, ft.thumbIndex - T.TOUCH_MAX) / T.TOUCH_SCALE; msg = 'Touch your thumb tip to your index fingertip'; }
+      const it = { key: 'thumb', finger: 'thumb', dev: Math.min(dev, 1), msg, active: w !== 'any' };
+      out.fingers.thumb = it;
+      if (it.active) items.push(it);
+    }
+    if (tg.spread === 'apart' || tg.spread === 'together') {
+      const apart = tg.spread === 'apart';
+      const dev = apart ? Math.max(0, T.SPREAD_APART_MIN - ft.spread) / T.SPREAD_SCALE
+                        : Math.max(0, ft.spread - T.SPREAD_TOGETHER_MAX) / T.SPREAD_SCALE;
+      const it = { key: 'spread', fingers: ['index', 'middle'], finger: 'index', dev: Math.min(dev, 1), active: true,
+        msg: apart ? 'Spread your index and middle fingers apart' : 'Press your index and middle fingers together' };
+      out.extras.push(it);
+      items.push(it);
+    }
+    return finalize(out, items);
+  }
+
+  // Template check for recorded signs: accept anything inside the natural
+  // variation of the recordings (mean ± 2.5 SD, with a minimum tolerance).
+  function newTemplate() {
+    return { n: 0, takes: 0, sum: Array(8).fill(0), sq: Array(8).fill(0), ghost: Array.from({ length: 21 }, () => [0, 0]) };
+  }
+  function addSample(tp, ft, px) {
+    const v = vec(ft);
+    tp.n++;
+    v.forEach((x, i) => { tp.sum[i] += x; tp.sq[i] += x * x; });
+    px.forEach((pt, i) => { const [u, w] = ft.frame.to(pt); tp.ghost[i][0] += u; tp.ghost[i][1] += w; });
+  }
+  function templateStats(tp) {
+    const n = Math.max(tp.n, 1);
+    const mean = tp.sum.map((s) => s / n);
+    const std = tp.sq.map((s, i) => Math.sqrt(Math.max(0, s / n - mean[i] * mean[i])));
+    const ghost = tp.ghost.map(([u, v]) => [u / n, v / n]);
+    return { mean, std, ghost };
+  }
+  function evalTemplate(ft, tp) {
+    const { mean, std } = templateStats(tp);
+    const v = vec(ft);
+    const out = { fingers: {}, extras: [], mode: 'reference' };
+    const items = [];
+    LONG.forEach((n, i) => {
+      const tol = Math.max(2.5 * std[i], 18);
+      const diff = v[i] - mean[i];
+      const dev = Math.min(1, Math.max(0, Math.abs(diff) - tol) / 45);
+      const msg = diff > 0 ? `Straighten your ${n} finger a bit` : `Bend your ${n} finger more`;
+      const it = { key: n, finger: n, dev, msg, active: true };
+      out.fingers[n] = it;
+      items.push(it);
+    });
+    {
+      const tolx = Math.max(2.5 * std[4], 0.14), toly = Math.max(2.5 * std[5], 0.14);
+      const dx = v[4] - mean[4], dy = v[5] - mean[5];
+      const ex = Math.max(0, Math.abs(dx) - tolx), ey = Math.max(0, Math.abs(dy) - toly);
+      const dev = Math.min(1, Math.hypot(ex, ey) / 0.3);
+      const msg = ex >= ey
+        ? (dx < 0 ? 'Move your thumb out toward your index-finger side' : 'Bring your thumb in toward your palm')
+        : (dy < 0 ? 'Move your thumb up a little' : 'Move your thumb down a little');
+      const it = { key: 'thumb', finger: 'thumb', dev, msg, active: true };
+      out.fingers.thumb = it;
+      items.push(it);
+    }
+    if (mean[0] < T.EXT_MAX_BEND && mean[1] < T.EXT_MAX_BEND) {
+      const tol = Math.max(2.5 * std[6], 7), diff = v[6] - mean[6];
+      const dev = Math.min(1, Math.max(0, Math.abs(diff) - tol) / T.SPREAD_SCALE);
+      const it = { key: 'spread', fingers: ['index', 'middle'], finger: 'index', dev, active: true,
+        msg: diff < 0 ? 'Spread your index and middle fingers wider' : 'Bring your index and middle fingers closer' };
+      out.extras.push(it);
+      items.push(it);
+    }
+    if (mean[7] < 0.35) {
+      const tol = Math.max(2.5 * std[7], 0.12);
+      const dev = Math.min(1, Math.max(0, v[7] - (mean[7] + tol)) / 0.3);
+      const it = { key: 'touch', fingers: ['thumb', 'index'], finger: 'thumb', dev, active: true, msg: 'Touch your thumb tip to your index fingertip' };
+      out.extras.push(it);
+      items.push(it);
+    }
+    return finalize(out, items);
+  }
+
+  const MIN_TEMPLATE_FRAMES = 10;
+  function hasTemplate(target, templates) {
+    const tp = templates && templates[target.id];
+    return !!(tp && tp.n >= MIN_TEMPLATE_FRAMES);
+  }
+  function evaluate(ft, target, templates) {
+    if (hasTemplate(target, templates)) return evalTemplate(ft, templates[target.id]);
+    if (target.fingers) return evalSpec(ft, target);
+    return null;
+  }
+
+  // ---------- ghost hands (in hand-frame units) ----------
+  const G = {
+    mcp: { index: [0.30, 0.95], middle: [0, 1], ring: [-0.26, 0.93], pinky: [-0.50, 0.83] },
+    len: { index: [0.44, 0.26, 0.21], middle: [0.48, 0.30, 0.23], ring: [0.45, 0.28, 0.22], pinky: [0.36, 0.21, 0.20] },
+    tilt: { index: 6, middle: 0, ring: -6, pinky: -14 },
+    thumb: {
+      out:  [[0.20, 0.18], [0.45, 0.35], [0.72, 0.45], [0.95, 0.52]],
+      side: [[0.20, 0.18], [0.40, 0.40], [0.49, 0.62], [0.48, 0.82]],
+      in:   [[0.20, 0.18], [0.38, 0.38], [0.30, 0.58], [0.08, 0.66]],
+    },
+  };
+  function synthGhost(tg) {
+    const pts = new Array(21);
+    pts[0] = [0, 0];
+    const tilt = Object.assign({}, G.tilt);
+    if (tg.spread === 'apart') { tilt.index = 14; tilt.middle = -7; }
+    if (tg.spread === 'together') { tilt.index = 2; tilt.middle = 0; tilt.ring = -3; tilt.pinky = -8; }
+    const shape = Object.assign({}, tg.fingers || {}, tg.ghost || {});
+    for (const n of LONG) {
+      const a = tilt[n] * Math.PI / 180, d = [Math.sin(a), Math.cos(a)];
+      const [m, p, q, t] = IDX[n];
+      const L = G.len[n], M = G.mcp[n];
+      pts[m] = M.slice();
+      if (shape[n] === 'bent') {
+        // Folded finger seen from the front: a short knuckle, then the rest of
+        // the finger hooks back down over the palm (offset sideways so the
+        // hook reads as "curled" rather than as a short raised finger).
+        const s = [d[1], -d[0]];
+        pts[p] = [M[0] + d[0] * L[0] * 0.38, M[1] + d[1] * L[0] * 0.38];
+        pts[q] = [pts[p][0] - d[0] * L[1] * 0.95 + s[0] * 0.07, pts[p][1] - d[1] * L[1] * 0.95 + s[1] * 0.07];
+        pts[t] = [pts[q][0] - d[0] * L[2] * 0.85 + s[0] * 0.02, pts[q][1] - d[1] * L[2] * 0.85 + s[1] * 0.02];
+      } else {
+        pts[p] = [M[0] + d[0] * L[0], M[1] + d[1] * L[0]];
+        pts[q] = [pts[p][0] + d[0] * L[1], pts[p][1] + d[1] * L[1]];
+        pts[t] = [pts[q][0] + d[0] * L[2], pts[q][1] + d[1] * L[2]];
+      }
+    }
+    if (tg.thumb === 'touchIndex') {
+      const tip = pts[8];
+      pts[1] = [0.20, 0.18];
+      pts[2] = [0.42, 0.38];
+      pts[3] = [(0.42 + tip[0]) / 2 + 0.08, (0.38 + tip[1]) / 2];
+      pts[4] = [tip[0] + 0.03, tip[1] - 0.02];
+    } else {
+      const th = G.thumb[tg.thumb] || G.thumb.side;
+      th.forEach((pt, i) => { pts[1 + i] = pt.slice(); });
+    }
+    return pts;
+  }
+  function ghostFor(target, templates) {
+    if (hasTemplate(target, templates)) return templateStats(templates[target.id]).ghost;
+    if (target.fingers) return synthGhost(target);
+    return null;
+  }
+  function ghostToPx(ghost, frame) {
+    return ghost.map(([u, v]) => frame.from(u, v));
+  }
+
+  // ---------- quality gate ----------
+  function quality(o) {
+    const bad = (code, msg, icon) => ({ ok: false, code, msg, icon });
+    if (!o.lms) return bad('nohand', 'Show one hand to the camera', '✋');
+    if (o.brightness != null && o.brightness < Q.DARK) return bad('dark', "It's too dark. Face a light or a window", '💡');
+    if (o.presence != null && o.presence < Q.MIN_PRESENCE) return bad('unsure', 'Hold your hand still so I can see it', '👀');
+    for (const l of o.lms) {
+      if (l.x < Q.EDGE || l.x > 1 - Q.EDGE || l.y < Q.EDGE || l.y > 1 - Q.EDGE) return bad('edge', 'Keep your whole hand inside the frame', '🖼️');
+    }
+    const palmPx = len2(sub(o.px[9], o.px[0]));
+    const palm = palmPx / o.H;
+    if (palm < Q.MIN_PALM) return bad('far', 'Move your hand closer to the camera', '🔍');
+    if (palm > Q.MAX_PALM) return bad('close', 'Move your hand back a little', '↩️');
+    if (!o.allowSideways && len2(sub(o.px[5], o.px[17])) / palmPx < Q.MIN_PALM_WIDTH) {
+      return bad('edgeon', 'Turn your palm toward the camera', '🔄');
+    }
+    return { ok: true, code: 'ok', msg: '' };
+  }
+  // Average landmark movement between two frames, in palm units.
+  function motion(prev, px) {
+    if (!prev || !px) return 1;
+    const palm = len2(sub(px[9], px[0])) || 1;
+    let s = 0;
+    for (let i = 0; i < px.length; i++) s += Math.hypot(px[i].x - prev[i].x, px[i].y - prev[i].y);
+    return s / px.length / palm;
+  }
+
+  // ---------- One Euro filter (Casiez et al. 2012) ----------
+  class OneEuro {
+    constructor(minCutoff = 1.5, beta = 8, dCutoff = 1) {
+      this.minCutoff = minCutoff; this.beta = beta; this.dCutoff = dCutoff;
+      this.x = null; this.dx = 0; this.t = null;
+    }
+    static alpha(cutoff, dt) { const tau = 1 / (2 * Math.PI * cutoff); return 1 / (1 + tau / dt); }
+    filter(x, t) {
+      if (this.x === null || t <= this.t) { this.x = x; this.t = t; return x; }
+      const dt = t - this.t;
+      const dx = (x - this.x) / dt;
+      const ad = OneEuro.alpha(this.dCutoff, dt);
+      this.dx = ad * dx + (1 - ad) * this.dx;
+      const a = OneEuro.alpha(this.minCutoff + this.beta * Math.abs(this.dx), dt);
+      this.x = a * x + (1 - a) * this.x;
+      this.t = t;
+      return this.x;
+    }
+  }
+  function makeLandmarkFilter(opts) {
+    let fs = null;
+    return {
+      apply(lms, tSec) {
+        if (!fs) fs = Array.from({ length: lms.length * 3 }, () => new OneEuro(opts && opts.minCutoff, opts && opts.beta));
+        return lms.map((l, i) => ({
+          x: fs[i * 3].filter(l.x, tSec), y: fs[i * 3 + 1].filter(l.y, tSec), z: fs[i * 3 + 2].filter(l.z || 0, tSec),
+        }));
+      },
+      reset() { fs = null; },
+    };
+  }
+
+  // ---------- content ----------
+  // Static ASL fingerspelling letters that can be told apart by finger
+  // extension, thumb position and index/middle spread.
+  const LETTERS = [
+    { id: 'A', fingers: { index: 'bent', middle: 'bent', ring: 'bent', pinky: 'bent' }, thumb: 'side',
+      tip: 'Make a fist. Rest your thumb straight up along the side of your index finger.' },
+    { id: 'B', fingers: { index: 'ext', middle: 'ext', ring: 'ext', pinky: 'ext' }, thumb: 'in', spread: 'together',
+      tip: 'Flat hand, fingers together and pointing up. Fold your thumb across your palm.' },
+    { id: 'D', fingers: { index: 'ext', middle: 'bent', ring: 'bent', pinky: 'bent' }, thumb: 'in',
+      tip: 'Index finger points up. The other fingers curl down to touch your thumb.' },
+    { id: 'F', fingers: { index: 'any', middle: 'ext', ring: 'ext', pinky: 'ext' }, thumb: 'touchIndex', ghost: { index: 'bent' },
+      tip: 'Touch your thumb and index fingertips to make a circle. The other three fingers point up.' },
+    { id: 'I', fingers: { index: 'bent', middle: 'bent', ring: 'bent', pinky: 'ext' }, thumb: 'in',
+      tip: 'Make a fist and raise only your pinky. Keep your thumb over your fingers.' },
+    { id: 'L', fingers: { index: 'ext', middle: 'bent', ring: 'bent', pinky: 'bent' }, thumb: 'out',
+      tip: 'Index finger up and thumb straight out to the side, like an L.' },
+    { id: 'U', fingers: { index: 'ext', middle: 'ext', ring: 'bent', pinky: 'bent' }, thumb: 'in', spread: 'together',
+      tip: 'Index and middle fingers up and pressed together. Your thumb holds the other two down.' },
+    { id: 'V', fingers: { index: 'ext', middle: 'ext', ring: 'bent', pinky: 'bent' }, thumb: 'in', spread: 'apart',
+      tip: 'Index and middle fingers up in a V. Your thumb holds the other two down.' },
+    { id: 'W', fingers: { index: 'ext', middle: 'ext', ring: 'ext', pinky: 'bent' }, thumb: 'in',
+      tip: 'Index, middle and ring fingers up and spread. Your thumb holds your pinky down.' },
+    { id: 'Y', fingers: { index: 'bent', middle: 'bent', ring: 'bent', pinky: 'ext' }, thumb: 'out',
+      tip: 'Thumb and pinky out, the other fingers folded down.' },
+  ];
+  // Words spellable with the letters above, with no letter repeated back to back.
+  const WORDS = ['DAY', 'FLY', 'BAD', 'WAY', 'LAW', 'BUY', 'LID', 'AID', 'FIB', 'LAB', 'DUAL', 'DIAL', 'WILD', 'VIAL',
+    'AVID', 'WAVY', 'IDLY', 'WILY', 'BUILD', 'DAILY', 'VALID', 'FLUID', 'BADLY', 'LAVA'];
+
+  // Weighted pick: unseen and weak signs come up more often.
+  function pickWeighted(ids, stats, k, rng) {
+    rng = rng || Math.random;
+    const pool = ids.map((id) => {
+      const s = stats[id] || {};
+      const seen = s.seen || 0, wins = s.wins || 0;
+      let w = 1;
+      if (!seen) w += 2;
+      else w += 3 * (1 - wins / seen) + Math.min(2, (s.totalMs || 0) / Math.max(1, wins) / 4000);
+      return { id, w };
+    });
+    const out = [];
+    while (out.length < k && pool.length) {
+      const total = pool.reduce((a, b) => a + b.w, 0);
+      let r = rng() * total, i = 0;
+      while (i < pool.length - 1 && r > pool[i].w) { r -= pool[i].w; i++; }
+      out.push(pool[i].id);
+      pool.splice(i, 1);
+    }
+    return out;
+  }
+
+  root.SignEngine = {
+    T, Q, LONG, FINGERS, IDX, BONES, LETTERS, WORDS, VEC_KEYS, MIN_TEMPLATE_FRAMES,
+    toPx, handFrame, defaultFrame, makeFrame, features, vec, evaluate, evalSpec, evalTemplate,
+    newTemplate, addSample, templateStats, hasTemplate, synthGhost, ghostFor, ghostToPx,
+    quality, motion, OneEuro, makeLandmarkFilter, pickWeighted,
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<!-- ============================ GAME ============================ -->
+<script type="module">
+const E = window.SignEngine;
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const TEST = params.has('test'); // drive the game with injected landmarks, no camera
+const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+const MP_VERSION = '1.2.3';
+// ?mp=/path and ?model=/path let you self-host the library and model (e.g. offline or on a school network).
+const MP_BASE = params.get('mp') || `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}`;
+// Official model location (Google AI Edge docs), then the older Google Storage location as a fallback.
+const MODEL_URLS = params.get('model') ? [params.get('model')] : [
+  'https://huggingface.co/litert-community/MediaPipe-HandLandmarker-Full/resolve/main/hand_landmarker.task',
+  'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+];
+
+const HOLD_MS = 600;          // how long a correct, steady sign must be held
+const HINT_MS = 2500;         // show the single biggest correction after this
+const AUTO_GHOST_MS = 6500;   // show the ghost hand if still stuck after this
+const LESSON_LEN = 5;
+const RUSH_MS = 60000;
+const CAPTURE_FRAMES = 45;
+const MASTER_WINS = 3;
+
+// Camera-overlay colours. good/bad stay fixed so they read on any video;
+// ghost and ring come from the active theme.
+const COLORS = { good: '#2fe38c', bad: '#ff3d7f', idle: 'rgba(255,255,255,.9)', dim: 'rgba(255,255,255,.35)',
+  ghost: '#ffb067', ghostGlow: '#ff7417', ring: '#ff7417', discInk: '#0e1d55', discUnder: '#fff5e2', accent: '#ff7417' };
+const THEMES = ['swell', 'dark', 'grow'];
+
+// ---------- persistence ----------
+const STORE_KEY = 'signquest.v1';
+function defaultProfile() {
+  return { xp: 0, streak: { count: 0, last: null }, stats: {}, fingerMiss: {}, templates: {}, custom: [], mute: false, theme: 'swell' };
+}
+function loadProfile() {
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) return Object.assign(defaultProfile(), JSON.parse(raw)); } catch (e) { /* storage unavailable */ }
+  return defaultProfile();
+}
+function saveProfile() { try { localStorage.setItem(STORE_KEY, JSON.stringify(profile)); } catch (e) { /* ignore */ } }
+const profile = loadProfile();
+
+// ---------- targets ----------
+function allTargets() {
+  return E.LETTERS.map((l) => ({ ...l, label: l.id, kind: 'letter' }))
+    .concat(profile.custom.filter((c) => E.hasTemplate(c, profile.templates)).map((c) => ({ ...c, kind: 'custom' })));
+}
+const targetById = (id) => allTargets().find((t) => t.id === id);
+const letterTarget = (ch) => targetById(ch);
+
+// ---------- DOM ----------
+const video = $('video'), canvas = $('canvas'), ctx = canvas.getContext('2d');
+const mini = $('mini'), mctx = mini.getContext('2d');
+const stage = $('stage');
+let W = 640, H = 480;
+
+// ---------- theme ----------
+function applyTheme(name) {
+  if (!THEMES.includes(name)) name = 'swell';
+  document.documentElement.dataset.theme = name;
+  const cs = getComputedStyle(document.documentElement);
+  const v = (k) => cs.getPropertyValue(k).trim();
+  COLORS.ghost = v('--ghost'); COLORS.ghostGlow = v('--ghost-glow'); COLORS.ring = v('--ring');
+  COLORS.discInk = v('--disc-ink'); COLORS.discUnder = v('--disc-under'); COLORS.accent = v('--accent');
+  document.querySelectorAll('.swatch').forEach((s) => s.setAttribute('aria-pressed', String(s.dataset.t === name)));
+  if (profile.theme !== name) { profile.theme = name; saveProfile(); }
+  drawMini();
+}
+
+// ---------- sound ----------
+const sfx = {
+  ac: null,
+  init() { if (!this.ac) { try { this.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { /* no audio */ } } },
+  tone(f, dur, type = 'sine', vol = 0.12, when = 0) {
+    if (profile.mute || !this.ac) return;
+    const t = this.ac.currentTime + when, o = this.ac.createOscillator(), g = this.ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(this.ac.destination); o.start(t); o.stop(t + dur + 0.05);
+  },
+  success(combo) { const b = 520 * Math.pow(1.06, Math.min(combo, 10)); this.tone(b, 0.12, 'triangle'); this.tone(b * 1.5, 0.22, 'triangle', 0.12, 0.08); },
+  word() { [523, 659, 784, 1046].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.1, i * 0.07)); },
+  skip() { this.tone(220, 0.18, 'sine', 0.08); },
+  tick() { this.tone(880, 0.04, 'square', 0.03); },
+  done() { [392, 523, 659, 784, 1046].forEach((f, i) => this.tone(f, 0.25, 'triangle', 0.1, i * 0.09)); },
+};
+
+// ---------- tracking ----------
+let landmarker = null;
+const filter = E.makeLandmarkFilter();
+let lastVideoTime = -1, prevPx = null, motionEma = 1, brightness = null, lastBrightAt = 0;
+const brightCanvas = document.createElement('canvas'); brightCanvas.width = 32; brightCanvas.height = 24;
+const bctx = brightCanvas.getContext('2d', { willReadFrequently: true });
+let testLms = null;
+let cur = { lms: null, px: null, q: { ok: false, code: 'nohand', msg: 'Show one hand to the camera', icon: '✋' }, ft: null, ev: null, steady: false };
+let fps = 0, fpsFrames = 0, fpsAt = performance.now();
+
+async function initCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('This browser cannot open the camera. Try Chrome or Edge, and open the page from http://localhost.');
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: false });
+  video.srcObject = stream;
+  await video.play();
+  await new Promise((r) => (video.videoWidth ? r() : video.addEventListener('loadedmetadata', r, { once: true })));
+  setSize(video.videoWidth, video.videoHeight);
+}
+async function initModel(status) {
+  status('Loading the hand tracker. It\'s about 8 MB and only downloads once.');
+  const { FilesetResolver, HandLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  // Download the model once, trying each location in turn.
+  let model = null, lastErr = null;
+  for (const url of MODEL_URLS) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+      model = new Uint8Array(await res.arrayBuffer());
+      break;
+    } catch (e) { lastErr = e; console.warn('Model download failed:', url, e); }
+  }
+  if (!model) throw new Error(`Failed to fetch the hand model (${lastErr && lastErr.message})`);
+  const opts = (delegate) => ({ baseOptions: { modelAssetBuffer: model, delegate }, runningMode: 'VIDEO', numHands: 1,
+    minHandDetectionConfidence: 0.5, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
+  try { landmarker = await HandLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch (e) { console.warn('GPU delegate unavailable, using CPU', e); landmarker = await HandLandmarker.createFromOptions(fileset, opts('CPU')); }
+}
+function setSize(w, h) {
+  W = w; H = h; canvas.width = w; canvas.height = h;
+  stage.style.setProperty('--ar', `${w} / ${h}`);
+}
+
+function sampleBrightness(now) {
+  if (TEST) { brightness = 128; return; }
+  if (now - lastBrightAt < 500 || !video.videoWidth) return;
+  lastBrightAt = now;
+  bctx.drawImage(video, 0, 0, 32, 24);
+  const d = bctx.getImageData(0, 0, 32, 24).data;
+  let s = 0;
+  for (let i = 0; i < d.length; i += 4) s += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+  brightness = s / (d.length / 4);
+}
+
+function processFrame(now) {
+  let raw = null, presence = null, fresh = false;
+  if (TEST) { raw = testLms; fresh = true; }
+  else if (landmarker && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime; fresh = true;
+    const r = landmarker.detectForVideo(video, now);
+    raw = (r.landmarks && r.landmarks[0]) || null;
+    const hd = r.handedness || r.handednesses;
+    presence = hd && hd[0] && hd[0][0] ? hd[0][0].score : null;
+  }
+  if (!fresh) return false;
+  fpsFrames++;
+  if (now - fpsAt > 1000) { fps = fpsFrames; fpsFrames = 0; fpsAt = now; }
+  sampleBrightness(now);
+  const lms = raw ? filter.apply(raw, now / 1000) : (filter.reset(), null);
+  const px = lms ? E.toPx(lms, W, H) : null;
+  const target = att ? att.target : null;
+  const allowSideways = !!(capture || (target && target.kind === 'custom'));
+  const q = E.quality({ lms, px, W, H, brightness, presence, allowSideways });
+  const m = E.motion(prevPx, px);
+  motionEma = px ? (prevPx ? 0.6 * motionEma + 0.4 * m : 1) : 1;
+  prevPx = px;
+  const ft = px ? E.features(px) : null;
+  const ev = ft && target ? E.evaluate(ft, target, profile.templates) : null;
+  cur = { lms, px, q, ft, ev, steady: motionEma < E.Q.STEADY, presence };
+  return true;
+}
+
+// ---------- game state ----------
+let round = null;   // the active game
+let att = null;     // the current sign attempt
+let capture = null; // recording a reference
+let ghostPinned = false;
+
+function newAttempt(target, ghostDefault) {
+  att = { target, activeMs: 0, mismatchMs: 0, hold: 0, ghostShown: ghostDefault || ghostPinned, ghostUsed: ghostDefault || ghostPinned,
+    missed: new Set(), scoreRefAt: 0, scoreRef: 0, closerUntil: 0 };
+  renderTarget();
+}
+function statFor(id) {
+  return (profile.stats[id] = profile.stats[id] || { seen: 0, wins: 0, skips: 0, totalMs: 0, miss: {} });
+}
+function comboMult(c) { return c >= 8 ? 3 : c >= 5 ? 2 : c >= 3 ? 1.5 : 1; }
+
+function startLesson() {
+  const ids = allTargets().map((t) => t.id);
+  const pick = E.pickWeighted(ids, profile.stats, Math.min(LESSON_LEN, ids.length));
+  round = { mode: 'lesson', queue: pick.map(targetById), i: 0, results: [], combo: 0, bestCombo: 0, xp: 0, missed: {} };
+  closeOverlays();
+  nextLessonSign();
+}
+function nextLessonSign() {
+  const t = round.queue[round.i];
+  const s = profile.stats[t.id];
+  newAttempt(t, !(s && s.wins > 0)); // ghost on for signs you haven't landed yet
+  renderHud();
+}
+function startRush() {
+  const words = E.WORDS.slice().sort(() => Math.random() - 0.5);
+  round = { mode: 'rush', words, wi: 0, li: 0, word: words[0], timeLeft: RUSH_MS, results: [], combo: 0, bestCombo: 0, xp: 0, letters: 0, wordsDone: 0, missed: {} };
+  closeOverlays();
+  newAttempt(letterTarget(round.word[0]), false);
+  renderHud();
+}
+function startFree(id) {
+  round = { mode: 'free', id, count: 0, combo: 0, bestCombo: 0, xp: 0, results: [], missed: {} };
+  closeOverlays();
+  newAttempt(targetById(id), true);
+  renderHud();
+}
+
+const PRAISE = ['Nice!', 'Clean!', 'Nailed it!', 'Yes!', 'Sharp!', 'Lovely!'];
+function succeed() {
+  const t = att.target, s = statFor(t.id);
+  s.seen++; s.wins++; s.totalMs += att.activeMs; s.last = Date.now();
+  round.combo++; round.bestCombo = Math.max(round.bestCombo, round.combo);
+  const base = round.mode === 'rush' ? 5 : (att.ghostUsed ? 6 : 10);
+  const gained = Math.round(base * comboMult(round.combo));
+  round.xp += gained; profile.xp += gained;
+  round.results.push({ id: t.label, ok: true, ms: att.activeMs, ghost: att.ghostUsed });
+  noteMisses();
+  sfx.success(round.combo);
+  burst();
+  setMascot('happy', 900);
+  const streakTxt = round.combo >= 2 ? `, ${round.combo} in a row` : '';
+  feedback(PRAISE[Math.floor(Math.random() * PRAISE.length)], `+${gained} XP${streakTxt}`, 'good');
+  saveProfile(); renderTop();
+  round.celebrating = true;
+  const delay = round.mode === 'rush' ? 380 : 800;
+  setTimeout(() => {
+    if (!round) return;
+    round.celebrating = false;
+    if (round.mode === 'lesson') {
+      round.i++;
+      if (round.i >= round.queue.length) return endRound();
+      nextLessonSign();
+    } else if (round.mode === 'rush') {
+      round.letters++;
+      round.li++;
+      if (round.li >= round.word.length) {
+        round.wordsDone++; round.xp += 15; profile.xp += 15; sfx.word();
+        feedback(round.word, '+15 XP word bonus', 'word');
+        round.wi = (round.wi + 1) % round.words.length; round.word = round.words[round.wi]; round.li = 0;
+      }
+      newAttempt(letterTarget(round.word[round.li]), false);
+    } else {
+      round.count++;
+      newAttempt(att.target, ghostPinned || att.ghostShown);
+    }
+    renderHud();
+  }, delay);
+}
+function skip() {
+  if (!round || !att || round.celebrating || capture) return;
+  const t = att.target, s = statFor(t.id);
+  s.seen++; s.skips++;
+  noteMisses();
+  round.combo = 0;
+  round.results.push({ id: t.label, ok: false, ms: att.activeMs });
+  sfx.skip();
+  setMascot('oops', 800);
+  feedback('Skipped', `${t.label} will come back later`, 'skip');
+  saveProfile();
+  if (round.mode === 'lesson') {
+    round.i++;
+    if (round.i >= round.queue.length) return endRound();
+    nextLessonSign();
+  } else if (round.mode === 'rush') {
+    round.li++;
+    if (round.li >= round.word.length) { round.wi = (round.wi + 1) % round.words.length; round.word = round.words[round.wi]; round.li = 0; }
+    newAttempt(letterTarget(round.word[round.li]), false);
+  } else {
+    newAttempt(t, true);
+  }
+  renderHud();
+}
+function noteMisses() {
+  const s = statFor(att.target.id);
+  for (const f of att.missed) {
+    s.miss[f] = (s.miss[f] || 0) + 1;
+    profile.fingerMiss[f] = (profile.fingerMiss[f] || 0) + 1;
+    round.missed[f] = (round.missed[f] || 0) + 1;
+  }
+}
+function bumpStreak() {
+  const day = (d) => d.toISOString().slice(0, 10);
+  const today = day(new Date()), yest = day(new Date(Date.now() - 864e5));
+  if (profile.streak.last === today) return;
+  profile.streak.count = profile.streak.last === yest ? profile.streak.count + 1 : 1;
+  profile.streak.last = today;
+}
+function endRound() {
+  if (!round) return;
+  const r = round;
+  round = null; att = null;
+  bumpStreak(); saveProfile(); renderTop();
+  sfx.done(); confetti();
+  const wins = r.results.filter((x) => x.ok).length;
+  let stars, title;
+  if (r.mode === 'rush') {
+    stars = r.letters >= 20 ? 3 : r.letters >= 12 ? 2 : r.letters >= 5 ? 1 : 0;
+    title = `${r.letters} letter${r.letters === 1 ? '' : 's'}`;
+  } else {
+    const avg = wins ? r.results.filter((x) => x.ok).reduce((a, b) => a + b.ms, 0) / wins : 99999;
+    stars = (wins >= r.results.length - 1 ? 1 : 0) + (wins === r.results.length ? 1 : 0) + (wins === r.results.length && avg < 5000 ? 1 : 0);
+    stars = Math.max(stars, wins ? 1 : 0);
+    title = wins === r.results.length ? 'Perfect round' : 'Round done';
+  }
+  $('resSuns').innerHTML = [0, 1, 2].map((i) => `<i class="${i < stars ? 'on' : ''}" style="animation-delay:${0.15 + i * 0.18}s"></i>`).join('');
+  $('resSuns').setAttribute('aria-label', `${stars} of 3 suns`);
+  $('resTitle').textContent = title;
+  const avgS = wins ? (r.results.filter((x) => x.ok).reduce((a, b) => a + b.ms, 0) / wins / 1000).toFixed(1) : null;
+  const stats = r.mode === 'rush'
+    ? [[`+${r.xp}`, 'XP'], [r.wordsDone, r.wordsDone === 1 ? 'word spelled' : 'words spelled'], [r.bestCombo, 'best combo'], [profile.streak.count, 'day streak']]
+    : [[`+${r.xp}`, 'XP'], [`${wins}/${r.results.length}`, 'signed'], [avgS ? `${avgS}s` : '–', 'average time'], [r.bestCombo, 'best combo'], [profile.streak.count, 'day streak']];
+  $('resStats').innerHTML = stats.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
+  $('resList').innerHTML = r.results.map((x) => `<span class="${x.ok ? '' : 'skip'}">${x.ok ? '✓' : '✗'} ${esc(x.id)}${x.ok ? `  ${(x.ms / 1000).toFixed(1)}s` : ''}</span>`).join('');
+  const weak = Object.entries(r.missed).sort((a, b) => b[1] - a[1])[0];
+  $('resWeak').textContent = weak ? `Your ${weak[0]} needed the most help this round. Signs that trip it up will come back more often.` : 'No weak spots this round.';
+  $('btnAgain').onclick = () => (r.mode === 'rush' ? startRush() : startLesson());
+  show('resultScreen');
+  renderTarget(); renderHud();
+  setTimeout(() => $('btnAgain').focus(), 50);
+}
+
+// ---------- capture (teach a sign / record a reference) ----------
+function startCapture(id, label, isCustom) {
+  capture = { id, label, isCustom, phase: 'countdown', t: 0, n: 0, tp: E.newTemplate(), lastTick: 3 };
+  closeOverlays();
+  if (!round) round = { mode: 'free', id, count: 0, combo: 0, bestCombo: 0, xp: 0, results: [], missed: {} };
+  renderTarget(); renderHud();
+}
+function updateCapture(dt) {
+  const c = capture;
+  if (!cur.q.ok) { c.phase = 'countdown'; c.t = 0; c.lastTick = 3; return; }
+  if (c.phase === 'countdown') {
+    c.t += dt;
+    const left = Math.ceil((2000 - c.t) / 1000);
+    if (left < c.lastTick && left > 0) { c.lastTick = left; sfx.tick(); }
+    if (c.t >= 2000) { c.phase = 'rec'; }
+  } else if (cur.steady && cur.ft) {
+    E.addSample(c.tp, cur.ft, cur.px);
+    c.n++;
+    if (c.n >= CAPTURE_FRAMES) finishCapture();
+  }
+}
+function finishCapture() {
+  const c = capture;
+  capture = null;
+  const existing = profile.templates[c.id];
+  if (existing) {
+    existing.n += c.tp.n; existing.takes = (existing.takes || 1) + 1;
+    existing.sum = existing.sum.map((v, i) => v + c.tp.sum[i]);
+    existing.sq = existing.sq.map((v, i) => v + c.tp.sq[i]);
+    existing.ghost = existing.ghost.map((g, i) => [g[0] + c.tp.ghost[i][0], g[1] + c.tp.ghost[i][1]]);
+  } else {
+    c.tp.takes = 1;
+    profile.templates[c.id] = c.tp;
+  }
+  if (c.isCustom && !profile.custom.find((x) => x.id === c.id)) {
+    profile.custom.push({ id: c.id, label: c.label, tip: `Your recorded sign. Match the hand in the circle.` });
+  }
+  saveProfile();
+  sfx.word(); burst(); setMascot('happy', 900);
+  const takes = profile.templates[c.id].takes;
+  toast(`Saved ${c.label} (${takes} take${takes > 1 ? 's' : ''}).${takes < 3 ? ' Record another take, ideally from someone else, to make it more forgiving.' : ''}`);
+  startFree(c.id);
+}
+
+// ---------- per-frame update ----------
+let lastT = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(100, now - lastT); lastT = now;
+  const fresh = processFrame(now);
+  if (fresh) update(dt);
+  draw();
+  if (fresh) renderPanel();
+  if (!$('debug').classList.contains('hidden')) renderDebug();
+}
+function update(dt) {
+  if (capture) { updateCapture(dt); if (capture) setCoachForCapture(); return; }
+  if (!round || !att || round.celebrating) return;
+  const ok = cur.q.ok && cur.ev;
+  if (!ok) { att.hold = Math.max(0, att.hold - dt * 3); return; } // paused: no clock, no penalty
+  att.activeMs += dt;
+  if (round.mode === 'rush') {
+    round.timeLeft -= dt;
+    if (round.timeLeft <= 0) { round.timeLeft = 0; return endRound(); }
+  }
+  const ev = cur.ev;
+  if (ev.match) {
+    att.mismatchMs = 0;
+    att.hold = cur.steady ? att.hold + dt : Math.max(0, att.hold - dt);
+  } else {
+    att.mismatchMs += dt;
+    att.hold = Math.max(0, att.hold - dt * 2);
+    if (att.mismatchMs > 1500 && ev.worst) att.missed.add(ev.worst.finger);
+  }
+  if (!att.ghostShown && att.mismatchMs > AUTO_GHOST_MS) { att.ghostShown = true; att.ghostUsed = true; }
+  // "Closer!" when the match score improves noticeably
+  att.scoreRefAt += dt;
+  if (att.scoreRefAt > 900) {
+    if (!ev.match && ev.score - att.scoreRef > 0.12) att.closerUntil = performance.now() + 900;
+    att.scoreRef = ev.score; att.scoreRefAt = 0;
+  }
+  if (att.hold >= HOLD_MS) succeed();
+}
+
+// ---------- drawing ----------
+const particles = [];
+function burst() {
+  if (REDUCED) return;
+  const c = cur.px ? palmCenter(cur.px) : { x: W / 2, y: H / 2 };
+  const pal = [COLORS.good, COLORS.accent, '#ffffff', COLORS.ghostGlow];
+  for (let i = 0; i < 34; i++) {
+    const a = Math.random() * Math.PI * 2, sp = (0.25 + Math.random() * 0.6) * H / 900;
+    particles.push({ x: c.x, y: c.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - H / 3000, life: 900 + Math.random() * 400, age: 0,
+      r: (3 + Math.random() * 5) * H / 480, col: pal[i % pal.length], sq: i % 3 === 0 });
+  }
+}
+function confetti() {
+  if (REDUCED) return;
+  const pal = [COLORS.good, COLORS.accent, '#ffffff', COLORS.ghostGlow];
+  for (let i = 0; i < 90; i++) {
+    particles.push({ x: Math.random() * W, y: -20, vx: (Math.random() - 0.5) * W / 3000, vy: (0.2 + Math.random() * 0.4) * H / 1000,
+      life: 2200, age: 0, r: (4 + Math.random() * 4) * H / 480, col: pal[i % pal.length], sq: i % 2 === 0 });
+  }
+}
+function palmCenter(px) {
+  const ids = [0, 5, 9, 13, 17];
+  return { x: ids.reduce((a, i) => a + px[i].x, 0) / 5, y: ids.reduce((a, i) => a + px[i].y, 0) / 5 };
+}
+function drawHand(g, pts, colorFor, width, alpha, dashed, outline) {
+  g.save();
+  g.globalAlpha = alpha;
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  if (outline) { // a halo underneath keeps the hand readable on busy backgrounds
+    g.strokeStyle = outline; g.fillStyle = outline; g.lineWidth = width * 2.1;
+    for (const [a, b] of E.BONES) { g.beginPath(); g.moveTo(pts[a].x, pts[a].y); g.lineTo(pts[b].x, pts[b].y); g.stroke(); }
+    for (const p of pts) { g.beginPath(); g.arc(p.x, p.y, width * 1.2, 0, Math.PI * 2); g.fill(); }
+  }
+  if (dashed) g.setLineDash([width * 1.4, width * 1.1]);
+  for (const [a, b, f] of E.BONES) {
+    g.strokeStyle = colorFor(f);
+    g.lineWidth = width;
+    g.beginPath(); g.moveTo(pts[a].x, pts[a].y); g.lineTo(pts[b].x, pts[b].y); g.stroke();
+  }
+  g.setLineDash([]);
+  for (let i = 0; i < pts.length; i++) {
+    const f = i === 0 ? 'palm' : E.FINGERS.find((n) => E.IDX[n].includes(i));
+    g.fillStyle = colorFor(f);
+    g.beginPath(); g.arc(pts[i].x, pts[i].y, width * (i % 4 === 0 && i ? 0.9 : 0.7), 0, Math.PI * 2); g.fill();
+  }
+  g.restore();
+}
+function fingerColor(f) {
+  if (f === 'palm') return COLORS.idle;
+  if (!cur.ev || !cur.q.ok) return COLORS.dim;
+  const st = cur.ev.fingers[f];
+  if (!st) return COLORS.idle;
+  return st.ok && !st.extraBad ? COLORS.good : COLORS.bad;
+}
+function holdProgress() {
+  if (capture) return capture.phase === 'rec' ? capture.n / CAPTURE_FRAMES : capture.t / 2000;
+  if (att && cur.q.ok) return Math.min(1, att.hold / HOLD_MS);
+  return 0;
+}
+let lastHoldVar = -1;
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const palmPx = cur.px ? cur.ft.frame.palm : 0.22 * H;
+  // ghost hand
+  const showGhost = att && (att.ghostShown || ghostPinned) && !capture;
+  const ghost = showGhost ? E.ghostFor(att.target, profile.templates) : null;
+  if (ghost) {
+    const frame = cur.px && cur.q.ok ? cur.ft.frame : E.defaultFrame(W, H, 0.22);
+    const gp = E.ghostToPx(ghost, frame);
+    ctx.save(); ctx.shadowColor = COLORS.ghostGlow; ctx.shadowBlur = 18;
+    drawHand(ctx, gp, () => COLORS.ghost, Math.max(6, frame.palm * 0.1), 0.55, true);
+    ctx.restore();
+  }
+  // the learner's hand and the hold ring
+  const prog = holdProgress();
+  if (cur.px) {
+    const col = capture ? () => (cur.q.ok ? COLORS.ghost : COLORS.dim) : fingerColor;
+    drawHand(ctx, cur.px, col, Math.max(3, palmPx * 0.06), 0.95, false);
+    const c = palmCenter(cur.px), r = palmPx * 1.45;
+    const ringCol = capture && capture.phase === 'rec' ? COLORS.bad : COLORS.ring;
+    ctx.lineWidth = Math.max(6, palmPx * 0.1); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,.14)';
+    ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.stroke();
+    if (prog > 0) {
+      ctx.strokeStyle = ringCol; ctx.shadowColor = ringCol; ctx.shadowBlur = 16;
+      ctx.beginPath(); ctx.arc(c.x, c.y, r, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+  // the disc in the poster card fills with the same hold progress
+  const hv = Math.round(prog * 100) / 100;
+  if (hv !== lastHoldVar) { $('discWrap').style.setProperty('--hold', hv); lastHoldVar = hv; }
+  // particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.age += 16; p.x += p.vx * 16; p.y += p.vy * 16; p.vy += H / 400000 * 16;
+    if (p.age > p.life) { particles.splice(i, 1); continue; }
+    ctx.globalAlpha = 1 - p.age / p.life; ctx.fillStyle = p.col;
+    if (p.sq) ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    else { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+  }
+  ctx.globalAlpha = 1;
+}
+// Draw a ghost hand centred inside a square canvas (the poster disc, the start demo).
+function drawGhostIn(g, canvasEl, ghost, color) {
+  const s = canvasEl.width;
+  g.clearRect(0, 0, s, s);
+  if (!ghost) return;
+  const frame = E.makeFrame({ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: -1 }, 1);
+  const gp = E.ghostToPx(ghost, frame);
+  const xs = gp.map((p) => p.x), ys = gp.map((p) => p.y);
+  const bw = Math.max(...xs) - Math.min(...xs), bh = Math.max(...ys) - Math.min(...ys);
+  const k = Math.min(0.62 * s / bw, 0.62 * s / bh);
+  const cx = (Math.max(...xs) + Math.min(...xs)) / 2, cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+  const fit = gp.map((p) => ({ x: s / 2 + (p.x - cx) * k, y: s / 2 + (p.y - cy) * k }));
+  drawHand(g, fit, () => color, s * 0.05, 1, false, COLORS.discUnder);
+}
+function drawMini() {
+  if (capture) {
+    mctx.clearRect(0, 0, mini.width, mini.height);
+    mctx.save(); mctx.scale(-1, 1);
+    mctx.font = `${mini.width * 0.32}px system-ui`; mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
+    mctx.fillText('🎥', -mini.width / 2, mini.height / 2);
+    mctx.restore();
+    return;
+  }
+  const t = att && att.target;
+  drawGhostIn(mctx, mini, t ? E.ghostFor(t, profile.templates) : E.synthGhost(E.LETTERS[7]), COLORS.discInk);
+}
+
+// ---------- start screen demo: the ghost hand morphs through letters ----------
+const demoCanvas = $('demo'), dctx = demoCanvas.getContext('2d');
+const DEMO_SEQ = ['L', 'V', 'Y', 'B', 'W', 'A', 'I', 'U', 'D'];
+let demoOn = true;
+function demoLoop(now) {
+  if (!demoOn) return;
+  requestAnimationFrame(demoLoop);
+  const HOLD = 1300, MORPH = 450, step = HOLD + MORPH;
+  const k = REDUCED ? 0 : Math.floor(now / step) % DEMO_SEQ.length;
+  const t = REDUCED ? 0 : Math.max(0, (now % step) - HOLD) / MORPH;
+  const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const a = E.synthGhost(targetById(DEMO_SEQ[k])), b = E.synthGhost(targetById(DEMO_SEQ[(k + 1) % DEMO_SEQ.length]));
+  const g = a.map((p, i) => [p[0] + (b[i][0] - p[0]) * e, p[1] + (b[i][1] - p[1]) * e]);
+  drawGhostIn(dctx, demoCanvas, g, COLORS.discInk);
+  const label = DEMO_SEQ[e > 0.5 ? (k + 1) % DEMO_SEQ.length : k];
+  if ($('demoLetter').textContent !== label) $('demoLetter').textContent = label;
+}
+
+// ---------- mascot, coach, feedback ----------
+const mascotEl = $('mascot');
+let mascotState = 'idle', mascotUntil = 0;
+function setMascot(state, holdMs) {
+  const now = performance.now();
+  if (!holdMs && now < mascotUntil) return; // a reaction is still playing
+  if (holdMs) {
+    mascotUntil = now + holdMs;
+    mascotEl.setAttribute('class', 'mascot');
+    void mascotEl.getBoundingClientRect(); // restart the hop animation
+  } else if (state === mascotState) return;
+  mascotState = state;
+  mascotEl.setAttribute('class', 'mascot ' + state);
+}
+let coachText = '', coachCls = '';
+function setCoach(text, cls) {
+  if (text !== coachText) { $('coach').textContent = text; coachText = text; }
+  if (cls !== coachCls) { $('coach').className = 'coach ' + (cls || ''); coachCls = cls; }
+  setMascot(cls === 'fix' ? 'think' : cls === 'wait' ? 'oops' : 'idle');
+}
+function setCoachForCapture() {
+  const c = capture;
+  if (!cur.q.ok) return setCoach(`${cur.q.msg}.`, 'wait');
+  if (c.phase === 'countdown') return setCoach(`Get into ${c.label} and hold still… ${Math.max(1, Math.ceil((2000 - c.t) / 1000))}`, 'good');
+  setCoach(cur.steady ? `Recording ${c.label}… ${Math.round(100 * c.n / CAPTURE_FRAMES)}%` : 'Hold still…', 'fix');
+}
+let fbTimer = null;
+function feedback(title, sub, kind) {
+  const f = $('feedback');
+  $('fbTitle').textContent = title; $('fbSub').textContent = sub || '';
+  f.className = `feedback ${kind} show`;
+  clearTimeout(fbTimer);
+  fbTimer = setTimeout(() => f.classList.remove('show'), kind === 'skip' ? 1200 : 950);
+}
+
+// ---------- panel / HUD rendering ----------
+const fingerEls = {};
+(function buildFingers() {
+  const box = $('fingers');
+  for (const n of E.FINGERS) {
+    const d = document.createElement('div');
+    d.className = 'finger';
+    d.innerHTML = `<span class="mark">·</span>${n[0].toUpperCase() + n.slice(1)}`;
+    box.appendChild(d); fingerEls[n] = d;
+  }
+})();
+function renderPanel() {
+  const qb = $('qbanner');
+  const needHand = !!(att || capture);
+  if (!cur.q.ok && (needHand || cur.q.code !== 'nohand')) {
+    $('qicon').textContent = cur.q.icon || '✋'; $('qtext').textContent = cur.q.msg; qb.classList.remove('hidden');
+  } else qb.classList.add('hidden');
+
+  for (const n of E.FINGERS) {
+    const el = fingerEls[n];
+    const st = cur.ev && cur.q.ok && !capture ? cur.ev.fingers[n] : null;
+    const good = st && st.ok && !st.extraBad;
+    el.className = 'finger' + (st ? (good ? ' ok' : ' bad') : '');
+    el.firstChild.textContent = st ? (good ? '✓' : '✗') : '·';
+  }
+  const sc = cur.ev && cur.q.ok && !capture ? cur.ev.score : null;
+  $('matchPct').textContent = sc == null ? '–' : `${Math.round(sc * 100)}%`;
+  const fill = $('matchFill');
+  fill.style.width = `${sc == null ? 0 : Math.round(sc * 100)}%`;
+  fill.className = sc == null ? '' : sc >= 0.85 ? 'high' : sc >= 0.5 ? 'mid' : '';
+
+  if (capture) return;
+  if (!att) { setCoach(cur.px ? 'Hi! Pick a game to start.' : 'Show me your hand.', ''); return; }
+  if (round && round.celebrating) return;
+  if (!cur.q.ok) return setCoach(`${cur.q.msg}. The clock is paused.`, 'wait');
+  const ev = cur.ev;
+  if (!ev) return setCoach('Record this sign first.', 'wait');
+  if (ev.match) return setCoach(cur.steady ? 'Perfect. Hold it…' : 'Got it. Now hold still.', 'good');
+  if (performance.now() < att.closerUntil) return setCoach('Closer!', 'good');
+  if (att.mismatchMs > AUTO_GHOST_MS && !ghostPinned && att.ghostShown) return setCoach(`Match the dashed ghost hand. ${ev.worst ? ev.worst.msg + '.' : ''}`, 'fix');
+  if (att.mismatchMs > HINT_MS && ev.worst) return setCoach(`${ev.worst.msg}.`, 'fix');
+  setCoach(`Sign ${att.target.label}.`, '');
+}
+function renderTarget() {
+  const chip = $('targetChip');
+  if (capture) {
+    $('bigLetter').textContent = capture.label;
+    $('bigLetter').classList.toggle('long', capture.label.length > 2);
+    $('tip').textContent = 'Hold the sign still while the ring fills. This recording becomes the target, so sign it the way a fluent signer would.';
+    chip.classList.add('hidden');
+    $('refInfo').textContent = '';
+    drawMini();
+    return;
+  }
+  const t = att && att.target;
+  $('bigLetter').textContent = t ? t.label : 'Hi';
+  $('bigLetter').classList.toggle('long', !!(t && t.label.length > 2));
+  $('tip').textContent = t ? t.tip : 'Pick a game to start. The hand in the circle shows the target shape, the way you\'ll see it in a mirror.';
+  chip.classList.toggle('hidden', !t);
+  if (t) { chip.textContent = t.label; chip.classList.toggle('long', t.label.length > 2); }
+  const ref = t && E.hasTemplate(t, profile.templates) ? profile.templates[t.id] : null;
+  $('refInfo').textContent = !t ? '' : ref ? `Checking against your recorded reference (${ref.takes || 1} take${(ref.takes || 1) > 1 ? 's' : ''}).`
+    : (round && round.mode === 'free' ? 'Checking against built-in rules. If it rejects a correct sign, record a reference.' : '');
+  drawMini();
+}
+function renderHud() {
+  const mode = round ? round.mode : null;
+  $('session').classList.toggle('idle', !mode && !capture);
+  $('segs').classList.toggle('hidden', mode !== 'lesson' || !!capture);
+  $('timerWrap').classList.toggle('hidden', mode !== 'rush');
+  $('timerChip').classList.toggle('hidden', mode !== 'rush');
+  $('sessLabel').classList.toggle('hidden', !(mode === 'free' || capture));
+  if (mode === 'lesson') {
+    $('segs').innerHTML = round.queue.map((_, i) => {
+      const r = round.results[i];
+      return `<i class="${r ? (r.ok ? 'done' : 'skip') : i === round.i ? 'now' : ''}"></i>`;
+    }).join('');
+  }
+  if (capture) $('sessLabel').textContent = `Recording ${capture.label}`;
+  else if (mode === 'free') $('sessLabel').textContent = round.count ? `Practice: ${round.count} clean sign${round.count > 1 ? 's' : ''}` : 'Practice';
+  const showCombo = !!(round && round.combo >= 2);
+  $('comboChip').classList.toggle('hidden', !showCombo);
+  if (showCombo) { const m = comboMult(round.combo); $('comboChip').textContent = `🔥 ${round.combo}${m > 1 ? `  ×${m}` : ''}`; }
+  const wb = $('wordBar');
+  if (mode === 'rush' && !capture) {
+    wb.classList.remove('hidden');
+    wb.innerHTML = round.word.split('').map((ch, i) => `<span class="${i < round.li ? 'done' : i === round.li ? 'now' : ''}">${ch}</span>`).join('');
+  } else wb.classList.add('hidden');
+  $('actions').classList.toggle('hidden', !att || !!capture || mode === 'free');
+  $('freeActions').classList.toggle('hidden', mode !== 'free' || !!capture);
+  $('btnGhost').setAttribute('aria-pressed', String(ghostPinned));
+  const isCustom = att && att.target.kind === 'custom';
+  $('btnCalibReset').textContent = isCustom ? 'Delete' : 'Reset';
+  $('btnCalib').textContent = isCustom ? 'Add a take' : 'Record reference';
+  renderTimer();
+}
+function renderTimer() {
+  if (!round || round.mode !== 'rush') return;
+  $('timerChip').textContent = `${Math.ceil(round.timeLeft / 1000)}s`;
+  $('timerFill').style.width = `${(round.timeLeft / RUSH_MS) * 100}%`;
+}
+setInterval(renderTimer, 200);
+function renderTop() {
+  $('xp').textContent = profile.xp;
+  $('level').textContent = 1 + Math.floor(profile.xp / 100);
+  $('xpfill').style.width = `${profile.xp % 100}%`;
+  $('streak').textContent = profile.streak.count;
+  $('btnMute').textContent = profile.mute ? '🔇' : '🔊';
+}
+function renderDebug() {
+  const f = cur.ft, ev = cur.ev, T = E.T;
+  const lines = [`fps ${fps}  quality ${cur.q.code}  steady ${cur.steady ? 'yes' : 'no'} (${motionEma.toFixed(3)})`,
+    `brightness ${brightness == null ? '–' : brightness.toFixed(0)}  presence ${cur.presence == null ? '–' : cur.presence.toFixed(2)}`];
+  if (f) {
+    lines.push(`palm ${(f.frame.palm / H).toFixed(2)} of height  width ${f.palmWidth.toFixed(2)}`);
+    lines.push('bend (0 straight, 180 curled):');
+    for (const n of E.LONG) lines.push(`  ${n.padEnd(7)} ${f.bend[n].toFixed(0).padStart(4)}°  ${ev && ev.fingers[n] ? (ev.fingers[n].active ? (ev.fingers[n].ok ? 'OK' : 'WRONG') : '-') : ''}`);
+    lines.push(`thumb x ${f.thumbX.toFixed(2)} y ${f.thumbY.toFixed(2)}  ${ev && ev.fingers.thumb ? (ev.fingers.thumb.active ? (ev.fingers.thumb.ok ? 'OK' : 'WRONG') : '-') : ''}`);
+    lines.push(`  (in < ${T.THUMB_IN_MAX}, out > ${T.THUMB_OUT_MIN})`);
+    lines.push(`spread ${f.spread.toFixed(0)}°  thumb-index ${f.thumbIndex.toFixed(2)}`);
+  }
+  if (ev) lines.push(`mode ${ev.mode}  score ${ev.score.toFixed(2)}  match ${ev.match}`);
+  if (att) lines.push(`hold ${att.hold.toFixed(0)}/${HOLD_MS}  stuck ${att.mismatchMs.toFixed(0)}ms`);
+  $('debug').textContent = lines.join('\n');
+}
+
+// ---------- overlays & UI ----------
+const OVERLAYS = ['startScreen', 'homeScreen', 'resultScreen', 'teachScreen'];
+function show(id) { OVERLAYS.forEach((o) => $(o).classList.toggle('hidden', o !== id)); }
+function closeOverlays() { OVERLAYS.forEach((o) => $(o).classList.add('hidden')); }
+function goHome() {
+  round = null; att = null; capture = null;
+  renderTarget(); renderHud(); buildHome(); show('homeScreen');
+}
+function buildHome() {
+  const path = $('path');
+  path.innerHTML = '';
+  for (const t of allTargets()) {
+    const s = profile.stats[t.id] || {};
+    const wins = s.wins || 0, p = Math.min(1, wins / MASTER_WINS);
+    const b = document.createElement('button');
+    b.className = 'node' + (p >= 1 ? ' mastered' : '') + (t.kind === 'custom' ? ' custom' : '');
+    b.style.setProperty('--p', p);
+    b.innerHTML = `<span>${esc(t.kind === 'custom' ? t.label.slice(0, 7) : t.label)}</span><small>${p >= 1 ? 'Mastered' : wins ? `${wins} of ${MASTER_WINS}` : 'New'}</small>`;
+    b.setAttribute('aria-label', `Practise ${t.label}. ${p >= 1 ? 'Mastered.' : `${wins} of ${MASTER_WINS} clean signs.`}`);
+    b.onclick = () => startFree(t.id);
+    path.appendChild(b);
+  }
+  const weak = Object.entries(profile.fingerMiss).sort((a, b) => b[1] - a[1])[0];
+  $('homeSub').textContent = weak && weak[1] >= 3
+    ? `Your ${weak[0]} needs the most help so far. Learn five will bring back the signs that trip it up.`
+    : 'Rounds take about a minute. If the camera loses you, the clock stops and you lose nothing.';
+}
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 4500);
+}
+function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function toggleGhost() {
+  if (!att) return;
+  ghostPinned = !ghostPinned;
+  att.ghostShown = ghostPinned;
+  if (ghostPinned) att.ghostUsed = true;
+  renderHud();
+}
+function freeStep(delta) {
+  const ts = allTargets();
+  const i = ts.findIndex((t) => t.id === att.target.id);
+  const n = ts[(i + delta + ts.length) % ts.length];
+  round.id = n.id; round.count = 0;
+  newAttempt(n, true);
+  renderHud();
+}
+
+$('btnStart').onclick = async () => {
+  sfx.init();
+  const st = (m, err) => { $('startStatus').textContent = m; $('startStatus').classList.toggle('error', !!err); };
+  $('btnStart').disabled = true;
+  try {
+    st('Asking for camera permission…');
+    await initCamera();
+    await initModel(st);
+    demoOn = false;
+    goHome();
+  } catch (e) {
+    console.error(e);
+    const name = e && e.name;
+    let msg = e && e.message ? e.message : String(e);
+    if (name === 'NotAllowedError') msg = 'Camera access is blocked. Click the camera icon in the address bar, allow it, then reload the page.';
+    else if (name === 'NotFoundError') msg = 'No camera found. Connect one and reload the page.';
+    else if (name === 'NotReadableError') msg = 'Another app (Zoom, Meet…) is using the camera. Close it and reload the page.';
+    else if (/import|fetch|Failed to|network/i.test(msg)) msg = "The hand tracker didn't download. Check your internet connection and reload the page.";
+    st(msg, true);
+    $('btnStart').disabled = false;
+  }
+};
+document.querySelectorAll('.swatch').forEach((s) => { s.onclick = () => applyTheme(s.dataset.t); });
+$('modeLesson').onclick = () => { sfx.init(); startLesson(); };
+$('modeRush').onclick = () => { sfx.init(); startRush(); };
+$('modeTeach').onclick = () => { $('teachName').value = ''; show('teachScreen'); setTimeout(() => $('teachName').focus(), 50); };
+$('btnTeachGo').onclick = () => {
+  const label = $('teachName').value.trim().toUpperCase().slice(0, 16);
+  if (!label) { $('teachName').focus(); return; }
+  sfx.init();
+  startCapture('c_' + Date.now().toString(36), label, true);
+};
+$('teachName').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnTeachGo').click(); e.stopPropagation(); });
+$('btnTeachCancel').onclick = goHome;
+$('btnResHome').onclick = goHome;
+$('btnHome').onclick = goHome;
+$('btnQuit').onclick = goHome;
+$('btnSkip').onclick = skip;
+$('btnGhost').onclick = toggleGhost;
+$('btnPrev').onclick = () => freeStep(-1);
+$('btnNext').onclick = () => freeStep(1);
+$('btnCalib').onclick = () => { if (att) startCapture(att.target.id, att.target.label, att.target.kind === 'custom'); };
+$('btnCalibReset').onclick = () => {
+  if (!att) return;
+  const t = att.target;
+  delete profile.templates[t.id];
+  if (t.kind === 'custom') {
+    profile.custom = profile.custom.filter((c) => c.id !== t.id);
+    saveProfile(); toast(`Deleted ${t.label}.`); goHome(); return;
+  }
+  saveProfile(); toast(`${t.label} is back on the built-in rules.`); newAttempt(t, true); renderHud();
+};
+$('btnMute').onclick = () => { profile.mute = !profile.mute; saveProfile(); renderTop(); };
+window.addEventListener('keydown', (e) => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  if (k === 's') skip();
+  else if (k === 'h') toggleGhost();
+  else if (k === 'd') $('debug').classList.toggle('hidden');
+  else if (k === 'm') $('btnMute').click();
+  else if (k === 'escape') goHome();
+});
+
+// ---------- test hooks (only with ?test) ----------
+if (TEST) {
+  window.SQ = {
+    setHand(lms) { testLms = lms; },
+    // A synthetic hand for a built-in sign, in normalised coordinates.
+    handFor(id, opts = {}) {
+      const t = targetById(id);
+      const ghost = E.synthGhost(t);
+      const frame = E.defaultFrame(W, H, opts.scale || 0.22);
+      return E.ghostToPx(ghost, frame).map((p) => ({ x: p.x / W, y: p.y / H, z: 0 }));
+    },
+    state() { return { mode: round && round.mode, target: att && att.target.id, hold: att && att.hold, q: cur.q.code, match: cur.ev && cur.ev.match, xp: profile.xp, results: round && round.results, word: round && round.word, li: round && round.li }; },
+    startLesson, startRush, startFree, goHome, skip, applyTheme, profile,
+  };
+}
+
+// ---------- boot ----------
+applyTheme(profile.theme);
+renderTop(); renderTarget(); renderHud();
+requestAnimationFrame(loop);
+requestAnimationFrame(demoLoop);
+if (TEST) { setSize(640, 480); if (!params.has('start')) { demoOn = false; goHome(); } }
+</script>
+</body>
+</html>
