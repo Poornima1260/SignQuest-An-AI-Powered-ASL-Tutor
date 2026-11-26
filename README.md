@@ -56,38 +56,3 @@ python app.py
   how that sign looked in your training data turns red, with one correction like
   "Check your index finger". Hold the right sign to score.
 
-## How it works
-
-**Features** (`hands.to_features`): MediaPipe gives 21 3D hand landmarks. We move
-the wrist to the origin, mirror left hands so they match right hands, and scale
-so wrist-to-middle-knuckle = 1. That's 63 numbers per frame. Rotation is kept on
-purpose, because palm direction can change a sign's meaning.
-
-**Model**: `StandardScaler` + `MLPClassifier(128, 64)` by default. Predictions are
-averaged over 8 frames in the app to stop flicker.
-
-**Honest evaluation**: frames within one take are near-duplicates, so a random
-train/test split leaks and reports ~100%. `train.py` holds out **whole signers**
-(when there are 3 or more) or **whole takes**, and says which it used.
-
-**Feedback**: `train.py` stores each sign's average features. `app.py` compares
-your hand to that average finger by finger and flags the furthest one.
-
-## Adding more signs
-
-- New signs: run `collect.py` again with new `--signs`, then retrain. Everything
-  appends to `data/signs.csv`.
-- Datasets: put files in one folder per sign (`dataset/HELLO/*.jpg|*.mp4`) and run
-  `python extract.py dataset --signer dataset_name`. Video datasets of words
-  (like INCLUDE for Indian Sign Language) mostly contain moving signs; this
-  takes frames from the middle of each clip, so treat it as a rough start.
-
-## Ideas to try next
-
-- Tune hyperparameters with `GridSearchCV` + `GroupKFold` (group by signer).
-- Report accuracy per signer, not just overall.
-- Two-handed signs (most of the ISL alphabet): set `max_hands=2` in `HandTracker`
-  and concatenate both hands' features (126 numbers) plus their relative position.
-- Moving signs (J, Z, most words): record 20-30 frames per sample and train a
-  sequence model, e.g. flatten the frames into one vector for the MLP, or move
-  to a 1D-CNN/LSTM in PyTorch.
